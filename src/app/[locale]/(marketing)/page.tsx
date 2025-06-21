@@ -1,130 +1,192 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Sponsors } from '@/components/Sponsors';
+import Link from 'next/link';
+import { CheckCircle, Calendar, Users, Zap } from 'lucide-react';
+import { WaitlistForm } from '@/components/WaitlistForm';
 
 type IIndexProps = {
   params: Promise<{ locale: string }>;
 };
 
-export async function generateMetadata(props: IIndexProps) {
-  const { locale } = await props.params;
-  const t = await getTranslations({
-    locale,
-    namespace: 'Index',
-  });
-
+export async function generateMetadata() {
   return {
-    title: t('meta_title'),
-    description: t('meta_description'),
+    title: 'Projectic - Modern Task Management',
+    description: 'Streamline your workflow with our intuitive task management platform. Track progress, collaborate with teams, and boost productivity.',
   };
 }
 
 export default async function Index(props: IIndexProps) {
   const { locale } = await props.params;
   setRequestLocale(locale);
-  const t = await getTranslations({
-    locale,
-    namespace: 'Index',
-  });
 
   return (
     <>
-      <p>
-        {`Follow `}
-        <a
-          className="text-blue-700 hover:border-b-2 hover:border-blue-700"
-          href="https://twitter.com/ixartz"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          @Ixartz on Twitter
-        </a>
-        {` for updates and more information about the boilerplate.`}
-      </p>
-      <h2 className="mt-5 text-2xl font-bold">
-        Boilerplate Code for Your Next.js Project with Tailwind CSS
-      </h2>
-      <p className="text-base">
-        Next.js Boilerplate is a developer-friendly starter code for Next.js projects, built with Tailwind CSS and TypeScript.
-        {' '}
-        <span role="img" aria-label="zap">
-          ⚡️
-        </span>
-        {' '}
-        Designed with developer experience in mind, it includes:
-      </p>
-      <ul className="mt-3 text-base">
-        <li>🚀 Next.js with App Router support</li>
-        <li>🔥 TypeScript for type checking</li>
-        <li>💎 Tailwind CSS integration</li>
-        <li>
-          🔒 Authentication with
-          {' '}
-          <a
-            className="font-bold text-blue-700 hover:border-b-2 hover:border-blue-700"
-            href="https://clerk.com?utm_source=github&amp;utm_medium=sponsorship&amp;utm_campaign=nextjs-boilerplate"
-          >
-            Clerk
-          </a>
-          {' '}
-          (includes passwordless, social, and multi-factor auth)
-        </li>
-        <li>📦 ORM with DrizzleORM (PostgreSQL, SQLite, MySQL support)</li>
-        <li>
-          🌐 Multi-language support (i18n) with next-intl and
-          {' '}
-          <a
-            className="font-bold text-blue-700 hover:border-b-2 hover:border-blue-700"
-            href="https://l.crowdin.com/next-js"
-          >
-            Crowdin
-          </a>
-        </li>
-        <li>🔴 Form handling (React Hook Form) and validation (Zod)</li>
-        <li>📏 Linting and formatting (ESLint, Prettier)</li>
-        <li>🦊 Git hooks and commit linting (Husky, Commitlint)</li>
-        <li>🦺 Testing suite (Vitest, React Testing Library, Playwright)</li>
-        <li>🎉 Storybook for UI development</li>
-        <li>
-          🐰 AI-powered code reviews with
-          {' '}
-          <a
-            className="font-bold text-blue-700 hover:border-b-2 hover:border-blue-700"
-            href="https://www.coderabbit.ai?utm_source=next_js_starter&utm_medium=github&utm_campaign=next_js_starter_oss_2025"
-          >
-            CodeRabbit
-          </a>
-        </li>
-        <li>
-          🚨 Error monitoring (
-          <a
-            className="font-bold text-blue-700 hover:border-b-2 hover:border-blue-700"
-            href="https://sentry.io/for/nextjs/?utm_source=github&amp;utm_medium=paid-community&amp;utm_campaign=general-fy25q1-nextjs&amp;utm_content=github-banner-nextjsboilerplate-logo"
-          >
-            Sentry
-          </a>
-          ) and logging (Pino.js)
-        </li>
-        <li>🖥️ Monitoring as Code (Checkly)</li>
-        <li>
-          🔐 Security and bot protection (
-          <a
-            className="font-bold text-blue-700 hover:border-b-2 hover:border-blue-700"
-            href="https://launch.arcjet.com/Q6eLbRE"
-          >
-            Arcjet
-          </a>
-          )
-        </li>
-        <li>🤖 SEO optimization (metadata, JSON-LD, Open Graph tags)</li>
-        <li>⚙️ Development tools (VSCode config, bundler analyzer, changelog generation)</li>
-      </ul>
-      <p className="text-base">
-        Our sponsors&apos; exceptional support has made this project possible.
-        Their services integrate seamlessly with the boilerplate, and we
-        recommend trying them out.
-      </p>
-      <h2 className="mt-5 text-2xl font-bold">{t('sponsors_title')}</h2>
-      <Sponsors />
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-24 lg:py-32 overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-grid-gray-900/[0.04] bg-[size:20px_20px]" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-6">
+                🚀 Coming Soon
+              </span>
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+              Streamline Your
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> Workflow</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
+              Organize tasks, track progress, and collaborate with your team using our intuitive task management platform. 
+              Built for modern teams who value simplicity and efficiency.
+            </p>
+            <div className="mb-12">
+              <WaitlistForm />
+            </div>
+          </div>
+          
+          {/* Dashboard Preview */}
+          <div className="mt-20 max-w-5xl mx-auto">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl transform rotate-1"></div>
+              <div className="relative bg-white rounded-2xl shadow-2xl border transform -rotate-1 hover:rotate-0 transition-transform duration-300">
+                <div className="bg-gray-100 rounded-t-2xl p-4 border-b">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div className="ml-4 text-sm text-gray-600 font-medium">Projectic Dashboard</div>
+                  </div>
+                </div>
+                <div className="p-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200">
+                      <CheckCircle className="h-6 w-6 text-green-600" />
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900">Complete project documentation</div>
+                        <div className="text-sm text-gray-600">Due: Today</div>
+                      </div>
+                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">Done</span>
+                    </div>
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                      <CheckCircle className="h-6 w-6 text-blue-600" />
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900">Review pull requests</div>
+                        <div className="text-sm text-gray-600">Due: Tomorrow</div>
+                      </div>
+                      <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium">In Progress</span>
+                    </div>
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                      <CheckCircle className="h-6 w-6 text-gray-400" />
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900">Plan next sprint</div>
+                        <div className="text-sm text-gray-600">Due: Next week</div>
+                      </div>
+                      <span className="bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-medium">Todo</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-24 bg-white relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Everything you need to stay
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> organized</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Powerful features designed to help you and your team work more efficiently and achieve your goals faster
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+            <div className="group text-center p-8 rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-blue-50/30">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <CheckCircle className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Task Management</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Create, organize, and track tasks with deadlines, priorities, and status updates. 
+                Never miss an important deadline again.
+              </p>
+            </div>
+
+            <div className="group text-center p-8 rounded-2xl border border-gray-200 hover:border-green-300 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-green-50/30">
+              <div className="bg-gradient-to-br from-green-500 to-green-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <Users className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Team Collaboration</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Work together seamlessly with shared projects, comments, and real-time updates. 
+                Keep everyone on the same page.
+              </p>
+            </div>
+
+            <div className="group text-center p-8 rounded-2xl border border-gray-200 hover:border-purple-300 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-purple-50/30">
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <Calendar className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Smart Scheduling</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Intelligent deadline management with calendar integration and automated reminders. 
+                Stay ahead of your schedule.
+              </p>
+            </div>
+
+            <div className="group text-center p-8 rounded-2xl border border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-orange-50/30">
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <Zap className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Lightning Fast</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Built with modern technology for instant loading and real-time updates. 
+                No more waiting around.
+              </p>
+            </div>
+
+            <div className="group text-center p-8 rounded-2xl border border-gray-200 hover:border-red-300 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-red-50/30">
+              <div className="bg-gradient-to-br from-red-500 to-red-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <CheckCircle className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Priority Management</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Set priorities and urgency levels to focus on what matters most. 
+                Visual indicators keep you focused.
+              </p>
+            </div>
+
+            <div className="group text-center p-8 rounded-2xl border border-gray-200 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-indigo-50/30">
+              <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <Users className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Secure & Private</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Your data is protected with enterprise-grade security and privacy controls. 
+                Work with confidence.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-gray-900 py-16">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Ready to boost your productivity?
+          </h2>
+          <p className="text-lg text-gray-300 mb-8">
+            Be among the first to experience the future of task management
+          </p>
+          <WaitlistForm variant="dark" />
+        </div>
+      </section>
     </>
   );
 };

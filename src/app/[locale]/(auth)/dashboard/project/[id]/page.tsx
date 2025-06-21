@@ -158,71 +158,132 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="w-full">
       {/* Project Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
+      <div className="mb-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
           <Link
             href="/dashboard/projects"
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors group"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Projects
+            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to Projects</span>
           </Link>
         </div>
         
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-4">
-            <div
-              className="w-6 h-6 rounded-full flex-shrink-0 mt-1"
-              style={{ backgroundColor: project.color }}
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">{project.name}</h1>
-              <p className="text-gray-600 mb-4">{project.description}</p>
-              
-              {/* Progress Bar */}
-              <div className="mb-4 w-80">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {completedTasks}/{totalTasks} completed
-                  </span>
-                  <span className="text-sm text-gray-500">{progressPercentage}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+        {/* Header Card */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          {/* Colored Header Bar */}
+          <div 
+            className="h-2"
+            style={{ backgroundColor: project.color }}
+          />
+          
+          <div className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                {/* Project Title and Description */}
+                <div className="flex items-center gap-3 mb-3">
                   <div
-                    className="h-2 rounded-full transition-all duration-300"
-                    style={{
-                      backgroundColor: project.color,
-                      width: `${(completedTasks / totalTasks) * 100}%`,
-                    }}
-                  />
+                    className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm"
+                    style={{ backgroundColor: `${project.color}15`, border: `2px solid ${project.color}` }}
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: project.color }}
+                    />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                    <p className="text-gray-600 mt-1">{project.description}</p>
+                  </div>
+                </div>
+                
+                {/* Progress Section */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-gray-400" />
+                      <span className="text-sm font-semibold text-gray-700">
+                        Progress
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-gray-900">
+                        {progressPercentage}%
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {completedTasks} of {totalTasks} tasks
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="relative">
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className="h-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+                        style={{
+                          backgroundColor: project.color,
+                          width: `${(completedTasks / totalTasks) * 100}%`,
+                        }}
+                      >
+                        {/* Animated shine effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Quick Stats */}
+                  <div className="flex items-center gap-4 mt-3 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="text-gray-600">{completedTasks} completed</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span className="text-gray-600">{totalTasks - completedTasks} remaining</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 ml-6">
+                <button
+                  type="button"
+                  onClick={() => setShowNewTaskModal(true)}
+                  className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                  style={{ backgroundColor: project.color }}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="font-medium">Add Task</span>
+                </button>
+                
+                <div className="flex items-center bg-gray-50 rounded-lg">
+                  <button
+                    type="button"
+                    className="rounded-lg p-2.5 hover:bg-gray-200 transition-colors"
+                    title="Edit Project"
+                  >
+                    <Edit className="h-4 w-4 text-gray-600" />
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-lg p-2.5 hover:bg-gray-200 transition-colors"
+                    title="Archive Project"
+                  >
+                    <Archive className="h-4 w-4 text-gray-600" />
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-lg p-2.5 hover:bg-gray-200 transition-colors"
+                    title="More Options"
+                  >
+                    <MoreVertical className="h-4 w-4 text-gray-600" />
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowNewTaskModal(true)}
-              className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-white shadow-md hover:bg-blue-600 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Add Task
-            </button>
-            <button
-              type="button"
-              className="rounded-md p-2 hover:bg-gray-100 transition-colors"
-              title="Edit Project"
-            >
-              <Edit className="h-4 w-4 text-gray-600" />
-            </button>
-            <button
-              type="button"
-              className="rounded-md p-2 hover:bg-gray-100 transition-colors"
-              title="Archive Project"
-            >
-              <Archive className="h-4 w-4 text-gray-600" />
-            </button>
           </div>
         </div>
       </div>

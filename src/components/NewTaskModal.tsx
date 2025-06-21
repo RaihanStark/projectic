@@ -2,7 +2,7 @@
 
 import type { FormEvent } from 'react';
 import type { CreateTaskData } from '@/utils/taskUtils';
-import { X } from 'lucide-react';
+import { X, Circle } from 'lucide-react';
 import { useState } from 'react';
 import { createTask } from '@/utils/taskUtils';
 
@@ -10,13 +10,22 @@ type NewTaskModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (task: any) => void;
+  selectedProjectId?: number;
 };
 
-const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
+// Mock project data for project selector
+const mockProjects = [
+  { id: 1, name: 'Work Website', color: '#3b82f6' },
+  { id: 2, name: 'Personal', color: '#10b981' },
+  { id: 3, name: 'Mobile App', color: '#f59e0b' },
+];
+
+const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskModalProps) => {
   const [task, setTask] = useState({
     title: '',
     description: '',
     label: '',
+    projectId: selectedProjectId || 2, // Default to Personal project
     status: 'todo',
     urgency: 'medium',
     deadline: '',
@@ -55,6 +64,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
         title: '',
         description: '',
         label: '',
+        projectId: selectedProjectId || 2,
         status: 'todo',
         urgency: 'medium',
         deadline: '',
@@ -127,6 +137,40 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
               rows={4}
               disabled={loading}
             />
+          </div>
+
+          {/* Project Selection */}
+          <div>
+            <label htmlFor="projectId" className={labelStyles}>
+              Project
+            </label>
+            <select
+              id="projectId"
+              name="projectId"
+              value={task.projectId}
+              onChange={handleInputChange}
+              className={inputStyles}
+              disabled={loading}
+            >
+              {mockProjects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+            {/* Visual Project Indicator */}
+            <div className="mt-2 flex items-center gap-2">
+              <Circle
+                className="h-3 w-3"
+                style={{
+                  color: mockProjects.find(p => p.id === Number(task.projectId))?.color,
+                  fill: mockProjects.find(p => p.id === Number(task.projectId))?.color,
+                }}
+              />
+              <span className="text-xs text-gray-500">
+                Task will be added to {mockProjects.find(p => p.id === Number(task.projectId))?.name}
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

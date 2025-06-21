@@ -1,67 +1,58 @@
-import { getTranslations } from 'next-intl/server';
+'use client';
+
+import type { Task } from '@/utils/taskUtils';
 import { notFound } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import TaskDetail from '@/components/TaskDetail';
+import { fetchTask } from '@/utils/taskUtils';
 
-// Mock data - in a real app, this would come from your database
-const mockTasks = [
-  {
-    id: 1,
-    title: 'Design the new landing page',
-    description: 'Create comprehensive mockups for the new landing page in Figma. The design should focus on user experience and conversion optimization. Include mobile-responsive layouts and ensure the design aligns with our brand guidelines. The mockups should cover all major sections including hero, features, testimonials, and call-to-action areas.',
-    label: 'Design',
-    status: 'in-progress' as const,
-    urgency: 'high' as const,
-    deadline: 'Mar 15, 2024',
-  },
-  {
-    id: 2,
-    title: 'Implement user authentication',
-    description: 'Set up a complete authentication system using Clerk. This includes implementing sign-in, sign-up, password reset, and social login functionality. The system should integrate seamlessly with our existing user management system and provide proper role-based access control. Also implement session management and security best practices.',
-    label: 'Frontend Development',
-    status: 'todo' as const,
-    urgency: 'critical' as const,
-    deadline: 'Mar 20, 2024',
-  },
-  {
-    id: 3,
-    title: 'Deploy the application to Vercel',
-    description: 'Configure and deploy the application to Vercel with proper CI/CD pipeline setup. This includes setting up environment variables, configuring build settings, and ensuring proper deployment workflows. Also set up monitoring and error tracking for production.',
-    label: 'DevOps',
-    status: 'done' as const,
-    urgency: 'medium' as const,
-    deadline: 'Mar 10, 2024',
-  },
-];
+type TaskDetailPageProps = {
+  params: Promise<{ id: string }>;
+};
 
-export async function generateMetadata(props: {
-  params: { locale: string; id: string };
-}) {
-  const t = await getTranslations({
-    locale: props.params.locale,
-    namespace: 'Dashboard',
-  });
+export default function TaskDetailPage({ params }: TaskDetailPageProps) {
+  const [task, setTask] = useState<Task | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const task = mockTasks.find(t => t.id === Number.parseInt(props.params.id));
+  useEffect(() => {
+    const loadTask = async () => {
+      try {
+        const { id } = await params;
+        const taskData = await fetchTask(Number.parseInt(id));
+        setTask(taskData);
+      } catch (err) {
+        console.error('Error loading task:', err);
+        setError('Failed to load task');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  return {
-    title: task ? `${task.title} - ${t('meta_title')}` : 'Task Not Found',
-  };
-}
+    loadTask();
+  }, [params]);
 
-export default function TaskDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const task = mockTasks.find(t => t.id === Number.parseInt(params.id));
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-gray-500">Loading task...</div>
+      </div>
+    );
+  }
 
-  if (!task) {
+  if (error || !task) {
     notFound();
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <TaskDetail {...task} />
-    </div>
+    <TaskDetail
+      id={task.id}
+      title={task.title}
+      description={task.description || ''}
+      label={task.label || ''}
+      status={task.status}
+      urgency={task.urgency}
+      deadline={task.deadline ? task.deadline.toISOString().split('T')[0] || '' : ''}
+    />
   );
 }

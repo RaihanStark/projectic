@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgTable, serial, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 
 // This file defines the structure of your database tables using the Drizzle ORM.
 
@@ -13,6 +13,23 @@ import { integer, pgTable, serial, timestamp } from 'drizzle-orm/pg-core';
 export const counterSchema = pgTable('counter', {
   id: serial('id').primaryKey(),
   count: integer('count').default(0),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+});
+
+export const tasksSchema = pgTable('tasks', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id', { length: 255 }).notNull(), // Clerk user ID
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  label: varchar('label', { length: 100 }),
+  status: varchar('status', { length: 20 }).notNull().default('todo'), // todo, in-progress, done, cancelled
+  urgency: varchar('urgency', { length: 20 }).notNull().default('medium'), // low, medium, high, critical
+  deadline: timestamp('deadline', { mode: 'date' }),
+  isStarred: boolean('is_starred').default(false),
   updatedAt: timestamp('updated_at', { mode: 'date' })
     .defaultNow()
     .$onUpdate(() => new Date())

@@ -1,3 +1,6 @@
+'use client';
+
+import type { Task } from '@/utils/taskUtils';
 import {
   Archive,
   Clock,
@@ -5,65 +8,118 @@ import {
   Star,
   Trash,
 } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
+import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
-
-export async function generateMetadata(props: { params: { locale: string } }) {
-  const t = await getTranslations({
-    locale: props.params.locale,
-    namespace: 'Dashboard',
-  });
-
-  return {
-    title: t('meta_title'),
-  };
-}
-
-const tasks = [
-  {
-    id: 1,
-    title: 'Design the new landing page',
-    description: 'Mockups needs to be created in Figma.',
-    status: 'In Progress',
-    priority: 'High',
-    date: 'Mar 3, 2024',
-    isStarred: true,
-  },
-  {
-    id: 2,
-    title: 'Implement user authentication',
-    description: 'Using Clerk for authentication.',
-    status: 'Todo',
-    priority: 'Medium',
-    date: 'Mar 2, 2024',
-    isStarred: false,
-  },
-  {
-    id: 3,
-    title: 'Deploy the application to Vercel',
-    description: 'Setup CI/CD pipeline.',
-    status: 'Done',
-    priority: 'Low',
-    date: 'Mar 1, 2024',
-    isStarred: false,
-  },
-];
+import { deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName, toggleTaskStar } from '@/utils/taskUtils';
 
 const priorityClasses: { [key: string]: string } = {
-  High: 'bg-red-100 text-red-800',
-  Medium: 'bg-yellow-100 text-yellow-800',
-  Low: 'bg-green-100 text-green-800',
+  low: 'bg-green-100 text-green-800',
+  medium: 'bg-yellow-100 text-yellow-800',
+  high: 'bg-orange-100 text-orange-800',
+  critical: 'bg-red-100 text-red-800',
 };
 
 const statusClasses: { [key: string]: string } = {
-  'In Progress': 'bg-blue-100 text-blue-800',
-  'Todo': 'bg-gray-200 text-gray-800',
-  'Done': 'bg-purple-100 text-purple-800',
+  'todo': 'bg-gray-200 text-gray-800',
+  'in-progress': 'bg-blue-100 text-blue-800',
+  'done': 'bg-purple-100 text-purple-800',
+  'cancelled': 'bg-red-100 text-red-800',
 };
 
 export default function Dashboard() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadTasks = useCallback(async () => {
+    try {
+      setLoading(true);
+      const fetchedTasks = await fetchTasks();
+      setTasks(fetchedTasks);
+    } catch (err) {
+      setError('Failed to load tasks');
+      console.error('Error loading tasks:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
+
+  // Expose refresh function to parent components
+  useEffect(() => {
+    // @ts-expect-error: Adding refreshTasks to window for dashboard refresh
+    window.refreshTasks = loadTasks;
+    return () => {
+      // @ts-expect-error: Removing refreshTasks from window for dashboard refresh
+      delete window.refreshTasks;
+    };
+  }, [loadTasks]);
+
+  const handleDeleteTask = async (id: number) => {
+    try {
+      await deleteTask(id);
+      setTasks(tasks.filter(task => task.id !== id));
+    } catch (err) {
+      console.error('Error deleting task:', err);
+    }
+  };
+
+  const handleToggleStar = async (id: number, currentStarred: boolean) => {
+    try {
+      const updatedTask = await toggleTaskStar(id, !currentStarred);
+      setTasks(tasks.map(task =>
+        task.id === id ? updatedTask : task,
+      ));
+    } catch (err) {
+      console.error('Error toggling star:', err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-gray-500">Loading tasks...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 space-y-4">
+        <div className="text-gray-500">No tasks found. Create your first task!</div>
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              const response = await fetch('/dashboard/api/seed', { method: 'POST' });
+              if (response.ok) {
+                loadTasks();
+              }
+            } catch (err) {
+              console.error('Error seeding data:', err);
+            }
+          }}
+          className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600"
+        >
+          Load Sample Data
+        </button>
+      </div>
+    );
+  }
+
   return (
     <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-sm">
       {tasks.map(task => (
@@ -76,7 +132,10 @@ export default function Dashboard() {
               type="checkbox"
               className="h-4 w-4 rounded border-gray-300"
             />
-            <button type="button">
+            <button
+              type="button"
+              onClick={() => handleToggleStar(task.id, task.isStarred)}
+            >
               <Star
                 className={cn(
                   'h-5 w-5',
@@ -96,7 +155,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <p className="truncate text-sm text-gray-500">
-                {task.description}
+                {task.description || 'No description'}
               </p>
             </Link>
           </div>
@@ -111,6 +170,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 className="rounded-md p-2 hover:bg-gray-200"
+                onClick={() => handleDeleteTask(task.id)}
               >
                 <Trash className="h-4 w-4 text-gray-600" />
               </button>
@@ -128,19 +188,19 @@ export default function Dashboard() {
                   statusClasses[task.status],
                 )}
               >
-                {task.status}
+                {getStatusDisplayName(task.status)}
               </span>
               <span
                 className={cn(
                   'rounded-full px-2 py-1 text-xs font-medium',
-                  priorityClasses[task.priority],
+                  priorityClasses[task.urgency],
                 )}
               >
-                {task.priority}
+                {getUrgencyDisplayName(task.urgency)}
               </span>
             </div>
             <p className="w-24 text-right text-sm text-gray-500">
-              {task.date}
+              {formatDate(task.deadline)}
             </p>
             <button
               type="button"

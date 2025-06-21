@@ -1,5 +1,6 @@
 'use client';
 
+import type { UpdateTaskData } from '@/utils/taskUtils';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -12,11 +13,13 @@ import {
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
 
+import { useState } from 'react';
 import { cn } from '@/utils/cn';
+import { updateTask } from '@/utils/taskUtils';
 
 type TaskDetailProps = {
+  id: number;
   title: string;
   description: string;
   label: string;
@@ -82,6 +85,8 @@ const urgencyConfig = {
 const TaskDetail = (props: TaskDetailProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [task, setTask] = useState(props);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -90,13 +95,34 @@ const TaskDetail = (props: TaskDetailProps) => {
     setTask(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
+  const handleSave = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const updateData: UpdateTaskData = {
+        title: task.title,
+        description: task.description || undefined,
+        label: task.label || undefined,
+        status: task.status,
+        urgency: task.urgency,
+        deadline: task.deadline || undefined,
+      };
+
+      await updateTask(task.id, updateData);
+      setIsEditing(false);
+    } catch (err) {
+      setError('Failed to update task. Please try again.');
+      console.error('Error updating task:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
     setTask(props);
     setIsEditing(false);
+    setError(null);
   };
 
   const { title, description, label, status, urgency, deadline } = task;
@@ -113,6 +139,12 @@ const TaskDetail = (props: TaskDetailProps) => {
 
   return (
     <div className="relative rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+      {error && (
+        <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="absolute right-8 top-8 flex items-center gap-2">
         {isEditing
           ? (
@@ -120,14 +152,16 @@ const TaskDetail = (props: TaskDetailProps) => {
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="inline-flex items-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                 >
-                  Save
+                  {loading ? 'Saving...' : 'Save'}
                 </button>
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="inline-flex items-center gap-2 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -163,6 +197,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                 name="title"
                 value={title}
                 onChange={handleInputChange}
+                disabled={loading}
                 className={cn(inputStyles, 'mb-3 text-3xl font-semibold')}
               />
             )
@@ -178,6 +213,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                     name="label"
                     value={label}
                     onChange={handleInputChange}
+                    disabled={loading}
                     className={smallInputStyles}
                   />
                 )
@@ -193,6 +229,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                     name="deadline"
                     value={deadline}
                     onChange={handleInputChange}
+                    disabled={loading}
                     className={smallInputStyles}
                   />
                 )
@@ -217,6 +254,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                 name="description"
                 value={description}
                 onChange={handleInputChange}
+                disabled={loading}
                 className={cn(inputStyles, 'leading-relaxed')}
                 rows={5}
               />
@@ -235,6 +273,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                   name="status"
                   value={status}
                   onChange={handleInputChange}
+                  disabled={loading}
                   className={cn(smallInputStyles, 'appearance-none')}
                 >
                   {Object.entries(statusConfig).map(([key, config]) => (
@@ -247,6 +286,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                   name="urgency"
                   value={urgency}
                   onChange={handleInputChange}
+                  disabled={loading}
                   className={cn(smallInputStyles, 'appearance-none')}
                 >
                   {Object.entries(urgencyConfig).map(([key, config]) => (

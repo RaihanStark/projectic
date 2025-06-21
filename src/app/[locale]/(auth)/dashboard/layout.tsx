@@ -3,8 +3,8 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
-import { useState } from 'react';
 
+import { useState } from 'react';
 import Header from '@/components/dashboard/Header';
 import Sidebar from '@/components/dashboard/Sidebar';
 import NewTaskModal from '@/components/NewTaskModal';
@@ -17,11 +17,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     redirect('/');
   }
 
-  const handleCreateTask = (task: any) => {
-    // In a real app, you'd handle the form submission here,
-    // like sending the data to your API.
-    // eslint-disable-next-line no-console
-    console.log('New task created:', task);
+  const handleCreateTask = () => {
+    // @ts-expect-error: Accessing refreshTasks on window for dashboard refresh
+    if (window.refreshTasks) {
+      // @ts-expect-error: Accessing refreshTasks on window for dashboard refresh
+      window.refreshTasks();
+    }
   };
 
   return (

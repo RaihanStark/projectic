@@ -1,8 +1,10 @@
 'use client';
 
 import type { FormEvent } from 'react';
+import type { CreateTaskData } from '@/utils/taskUtils';
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { createTask } from '@/utils/taskUtils';
 
 type NewTaskModalProps = {
   isOpen: boolean;
@@ -19,6 +21,8 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
     urgency: 'medium',
     deadline: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -27,10 +31,40 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
     setTask(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    onSubmit(task);
-    onClose();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const taskData: CreateTaskData = {
+        title: task.title,
+        description: task.description || undefined,
+        label: task.label || undefined,
+        status: task.status as any,
+        urgency: task.urgency as any,
+        deadline: task.deadline || undefined,
+      };
+
+      const newTask = await createTask(taskData);
+      onSubmit(newTask);
+      onClose();
+
+      // Reset form
+      setTask({
+        title: '',
+        description: '',
+        label: '',
+        status: 'todo',
+        urgency: 'medium',
+        deadline: '',
+      });
+    } catch (err) {
+      setError('Failed to create task. Please try again.');
+      console.error('Error creating task:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) {
@@ -56,6 +90,12 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
           Create a New Task
         </h2>
 
+        {error && (
+          <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="title" className={labelStyles}>
@@ -69,6 +109,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
               className={inputStyles}
               placeholder="e.g., Design the new landing page"
               required
+              disabled={loading}
             />
           </div>
 
@@ -84,6 +125,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
               className={inputStyles}
               placeholder="Add a more detailed description..."
               rows={4}
+              disabled={loading}
             />
           </div>
 
@@ -99,6 +141,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
                 onChange={handleInputChange}
                 className={inputStyles}
                 placeholder="e.g., Frontend"
+                disabled={loading}
               />
             </div>
             <div>
@@ -112,6 +155,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
                 value={task.deadline}
                 onChange={handleInputChange}
                 className={inputStyles}
+                disabled={loading}
               />
             </div>
           </div>
@@ -127,6 +171,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
                 value={task.status}
                 onChange={handleInputChange}
                 className={inputStyles}
+                disabled={loading}
               >
                 <option value="todo">Todo</option>
                 <option value="in-progress">In Progress</option>
@@ -144,6 +189,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
                 value={task.urgency}
                 onChange={handleInputChange}
                 className={inputStyles}
+                disabled={loading}
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -157,15 +203,17 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-200"
+              className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-200 disabled:opacity-50"
+              disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600"
+              className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 disabled:opacity-50"
+              disabled={loading}
             >
-              Create Task
+              {loading ? 'Creating...' : 'Create Task'}
             </button>
           </div>
         </form>

@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 const Sidebar = () => {
   return (
-    <aside className="hidden h-screen w-64 flex-col border-r border-gray-200 bg-gray-50 md:flex">
+    <aside className="hidden h-screen w-64 flex-col border-r border-gray-200 bg-white md:flex">
       <div className="flex h-16 items-center border-b border-gray-200 px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <Folder className="h-6 w-6" />

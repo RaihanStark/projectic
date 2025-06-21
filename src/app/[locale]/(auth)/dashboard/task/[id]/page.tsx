@@ -52,7 +52,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
       label={task.label || ''}
       status={task.status}
       urgency={task.urgency}
-      deadline={task.deadline ? task.deadline.toISOString().split('T')[0] || '' : ''}
+      deadline={task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : ''}
     />
   );
 }

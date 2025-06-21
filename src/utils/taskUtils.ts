@@ -1,15 +1,15 @@
 export type Task = {
   id: number;
-  userId: string;
+  userId: number;
   title: string;
   description: string | null;
   label: string | null;
   status: 'todo' | 'in-progress' | 'done' | 'cancelled';
   urgency: 'low' | 'medium' | 'high' | 'critical';
-  deadline: Date | null;
+  deadline: Date | string | null;
   isStarred: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 };
 
 export type CreateTaskData = {
@@ -83,7 +83,7 @@ export async function toggleTaskStar(id: number, isStarred: boolean): Promise<Ta
   return updateTask(id, { isStarred });
 }
 
-export function formatDate(date: Date | null): string {
+export function formatDate(date: Date | string | null): string {
   if (!date) {
     return '';
   }

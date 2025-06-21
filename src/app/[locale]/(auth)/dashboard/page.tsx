@@ -121,96 +121,115 @@ export default function Dashboard() {
   }
 
   return (
-    <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-sm">
-      {tasks.map(task => (
-        <li
-          key={task.id}
-          className="group flex items-center justify-between p-4 transition-colors hover:bg-gray-50"
-        >
-          <div className="flex items-center gap-4 flex-1">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <button
-              type="button"
-              onClick={() => handleToggleStar(task.id, task.isStarred)}
-            >
-              <Star
-                className={cn(
-                  'h-5 w-5',
-                  task.isStarred
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-300 group-hover:text-yellow-400',
-                )}
-              />
-            </button>
-            <Link
-              href={`/dashboard/task/${task.id}`}
-              className="flex items-center gap-4 flex-1 hover:bg-gray-100 rounded-lg p-2 -m-2 transition-colors"
-            >
-              <div className="w-64">
-                <p className="truncate font-medium text-gray-900">
-                  {task.title}
-                </p>
+    <div className="w-full overflow-hidden">
+      <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-sm">
+        {tasks.map(task => (
+          <li
+            key={task.id}
+            className="group p-4 transition-colors hover:bg-gray-50"
+          >
+            <div className="flex items-start gap-3 w-full">
+              {/* Left side - Checkbox, Star, and Task Info */}
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                <div className="flex items-center gap-3 mt-1">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleToggleStar(task.id, task.isStarred)}
+                    className="flex-shrink-0"
+                  >
+                    <Star
+                      className={cn(
+                        'h-5 w-5',
+                        task.isStarred
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300 group-hover:text-yellow-400',
+                      )}
+                    />
+                  </button>
+                </div>
+                
+                {/* Task Content */}
+                <Link
+                  href={`/dashboard/task/${task.id}`}
+                  className="flex-1 min-w-0 hover:bg-gray-100 rounded-lg p-2 -m-2 transition-colors"
+                >
+                  <div className="space-y-1">
+                    <p className="font-medium text-gray-900 line-clamp-1">
+                      {task.title}
+                    </p>
+                    <p className="text-sm text-gray-500 line-clamp-2">
+                      {task.description || 'No description'}
+                    </p>
+                  </div>
+                </Link>
               </div>
-              <p className="truncate text-sm text-gray-500">
-                {task.description || 'No description'}
-              </p>
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-              <button
-                type="button"
-                className="rounded-md p-2 hover:bg-gray-200"
-              >
-                <Archive className="h-4 w-4 text-gray-600" />
-              </button>
-              <button
-                type="button"
-                className="rounded-md p-2 hover:bg-gray-200"
-                onClick={() => handleDeleteTask(task.id)}
-              >
-                <Trash className="h-4 w-4 text-gray-600" />
-              </button>
-              <button
-                type="button"
-                className="rounded-md p-2 hover:bg-gray-200"
-              >
-                <Clock className="h-4 w-4 text-gray-600" />
-              </button>
+
+              {/* Right side - Actions and Status */}
+              <div className="flex items-center gap-3 flex-shrink-0">
+                {/* Action buttons */}
+                <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button
+                    type="button"
+                    className="rounded-md p-2 hover:bg-gray-200"
+                  >
+                    <Archive className="h-4 w-4 text-gray-600" />
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-md p-2 hover:bg-gray-200"
+                    onClick={() => handleDeleteTask(task.id)}
+                  >
+                    <Trash className="h-4 w-4 text-gray-600" />
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-md p-2 hover:bg-gray-200"
+                  >
+                    <Clock className="h-4 w-4 text-gray-600" />
+                  </button>
+                </div>
+
+                {/* Status badges */}
+                <div className="flex gap-2">
+                  <span
+                    className={cn(
+                      'rounded-full px-2 py-1 text-xs font-medium whitespace-nowrap',
+                      statusClasses[task.status],
+                    )}
+                  >
+                    {getStatusDisplayName(task.status)}
+                  </span>
+                  <span
+                    className={cn(
+                      'rounded-full px-2 py-1 text-xs font-medium whitespace-nowrap',
+                      priorityClasses[task.urgency],
+                    )}
+                  >
+                    {getUrgencyDisplayName(task.urgency)}
+                  </span>
+                </div>
+
+                {/* Date and more menu */}
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-gray-500 whitespace-nowrap">
+                    {formatDate(task.deadline)}
+                  </p>
+                  <button
+                    type="button"
+                    className="rounded-md p-2 hover:bg-gray-200"
+                  >
+                    <MoreVertical className="h-4 w-4 text-gray-600" />
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="flex w-48 justify-end gap-2">
-              <span
-                className={cn(
-                  'rounded-full px-2 py-1 text-xs font-medium',
-                  statusClasses[task.status],
-                )}
-              >
-                {getStatusDisplayName(task.status)}
-              </span>
-              <span
-                className={cn(
-                  'rounded-full px-2 py-1 text-xs font-medium',
-                  priorityClasses[task.urgency],
-                )}
-              >
-                {getUrgencyDisplayName(task.urgency)}
-              </span>
-            </div>
-            <p className="w-24 text-right text-sm text-gray-500">
-              {formatDate(task.deadline)}
-            </p>
-            <button
-              type="button"
-              className="rounded-md p-2 hover:bg-gray-200"
-            >
-              <MoreVertical className="h-4 w-4 text-gray-600" />
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

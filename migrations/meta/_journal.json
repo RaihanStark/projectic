@@ -15,6 +15,13 @@
       "when": 1750497305757,
       "tag": "0001_peaceful_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1750503105333,
+      "tag": "0002_early_hobgoblin",
+      "breakpoints": true
     }
   ]
 }

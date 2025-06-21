@@ -10,6 +10,18 @@ import { boolean, integer, pgTable, serial, text, timestamp, varchar } from 'dri
 // The migration is automatically applied during the next database interaction,
 // so there's no need to run it manually or restart the Next.js server.
 
+export const usersSchema = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  password: varchar('password', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+});
+
 export const counterSchema = pgTable('counter', {
   id: serial('id').primaryKey(),
   count: integer('count').default(0),
@@ -22,7 +34,7 @@ export const counterSchema = pgTable('counter', {
 
 export const tasksSchema = pgTable('tasks', {
   id: serial('id').primaryKey(),
-  userId: varchar('user_id', { length: 255 }).notNull(), // Clerk user ID
+  userId: integer('user_id').notNull().references(() => usersSchema.id),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description'),
   label: varchar('label', { length: 100 }),

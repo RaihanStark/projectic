@@ -1,7 +1,7 @@
 import { db } from '@/libs/DB';
 import { tasksSchema } from '@/models/Schema';
 
-export async function seedSampleTasks(userId: string) {
+export async function seedSampleTasks(userId: number) {
   const sampleTasks = [
     {
       userId,

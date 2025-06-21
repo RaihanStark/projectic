@@ -1,6 +1,5 @@
 import type { NextFetchEvent, NextRequest } from 'next/server';
 import { detectBot } from '@arcjet/next';
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import createMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import arcjet from '@/libs/Arcjet';
@@ -8,17 +7,13 @@ import { routing } from './libs/I18nRouting';
 
 const handleI18nRouting = createMiddleware(routing);
 
-const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)',
-  '/:locale/dashboard(.*)',
-]);
+const isProtectedRoute = (pathname: string) => {
+  return pathname.includes('/dashboard') || pathname.includes('/user-profile');
+};
 
-const isAuthPage = createRouteMatcher([
-  '/sign-in(.*)',
-  '/:locale/sign-in(.*)',
-  '/sign-up(.*)',
-  '/:locale/sign-up(.*)',
-]);
+const isAuthPage = (pathname: string) => {
+  return pathname.includes('/sign-in') || pathname.includes('/sign-up');
+};
 
 // Improve security with Arcjet
 const aj = arcjet.withRule(
@@ -48,23 +43,29 @@ export default async function middleware(
     }
   }
 
-  // Clerk keyless mode doesn't work with i18n, this is why we need to run the middleware conditionally
-  if (
-    isAuthPage(request) || isProtectedRoute(request)
-  ) {
-    return clerkMiddleware(async (auth, req) => {
-      if (isProtectedRoute(req)) {
-        const locale = req.nextUrl.pathname.match(/(\/.*)\/dashboard/)?.at(1) ?? '';
+  const pathname = request.nextUrl.pathname;
 
-        const signInUrl = new URL(`${locale}/sign-in`, req.url);
+  // Handle auth routes
+  if (isProtectedRoute(pathname)) {
+    // Check for auth cookie
+    const authToken = request.cookies.get('auth-token');
+    
+    if (!authToken) {
+      const locale = pathname.match(/(\/.*)\/dashboard/)?.at(1) ?? '';
+      const signInUrl = new URL(`${locale}/sign-in`, request.url);
+      return NextResponse.redirect(signInUrl);
+    }
+  }
 
-        await auth.protect({
-          unauthenticatedUrl: signInUrl.toString(),
-        });
-      }
-
-      return handleI18nRouting(request);
-    })(request, event);
+  // If user has auth token and tries to access auth pages, redirect to dashboard
+  if (isAuthPage(pathname)) {
+    const authToken = request.cookies.get('auth-token');
+    
+    if (authToken) {
+      const locale = pathname.match(/(\/.*)\/sign-/)?.at(1) ?? '';
+      const dashboardUrl = new URL(`${locale}/dashboard`, request.url);
+      return NextResponse.redirect(dashboardUrl);
+    }
   }
 
   return handleI18nRouting(request);

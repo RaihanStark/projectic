@@ -1,14 +1,9 @@
-import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/libs/Auth';
 
 export async function getCurrentUserId() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error('Unauthorized');
-  }
-
-  return userId;
+  const user = await requireAuth();
+  return user.id;
 }
 
 export function createErrorResponse(message: string, status: number = 400) {

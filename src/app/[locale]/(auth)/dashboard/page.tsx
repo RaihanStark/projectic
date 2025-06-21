@@ -6,6 +6,7 @@ import {
   Trash,
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 
 import { cn } from '@/utils/cn';
 
@@ -70,7 +71,7 @@ export default function Dashboard() {
           key={task.id}
           className="group flex items-center justify-between p-4 transition-colors hover:bg-gray-50"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-1">
             <input
               type="checkbox"
               className="h-4 w-4 rounded border-gray-300"
@@ -85,14 +86,19 @@ export default function Dashboard() {
                 )}
               />
             </button>
-            <div className="w-64">
-              <p className="truncate font-medium text-gray-900">
-                {task.title}
+            <Link
+              href={`/dashboard/task/${task.id}`}
+              className="flex items-center gap-4 flex-1 hover:bg-gray-100 rounded-lg p-2 -m-2 transition-colors"
+            >
+              <div className="w-64">
+                <p className="truncate font-medium text-gray-900">
+                  {task.title}
+                </p>
+              </div>
+              <p className="truncate text-sm text-gray-500">
+                {task.description}
               </p>
-            </div>
-            <p className="truncate text-sm text-gray-500">
-              {task.description}
-            </p>
+            </Link>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">

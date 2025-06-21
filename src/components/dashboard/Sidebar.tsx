@@ -8,7 +8,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-const Sidebar = () => {
+type SidebarProps = {
+  onNewTaskClick: () => void;
+};
+
+const Sidebar = ({ onNewTaskClick }: SidebarProps) => {
   return (
     <aside className="hidden h-screen w-64 flex-col border-r border-gray-200 bg-white md:flex">
       <div className="flex h-16 items-center border-b border-gray-200 px-6">
@@ -22,6 +26,7 @@ const Sidebar = () => {
           <div className="px-2 py-2">
             <button
               type="button"
+              onClick={onNewTaskClick}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-white shadow-md hover:bg-blue-600"
             >
               <Plus className="h-4 w-4" />

@@ -5,9 +5,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev:spotlight": "spotlight-sidecar",
     "dev:next": "next dev --turbopack",
-    "dev": "run-p db-server:file dev:*",
+    "dev": "run-p db-server:file dev:next",
     "build:next": "next build",
     "build": "run-p db-server:memory build:* --race",
     "start": "next start",
@@ -67,7 +66,6 @@
     "@next/bundle-analyzer": "^15.3.4",
     "@next/eslint-plugin-next": "^15.3.4",
     "@playwright/test": "^1.53.1",
-    "@spotlightjs/spotlight": "^3.0.1",
     "@storybook/addon-a11y": "^9.0.12",
     "@storybook/addon-docs": "^9.0.12",
     "@storybook/addon-vitest": "^9.0.12",

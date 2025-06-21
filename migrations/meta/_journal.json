@@ -22,13 +22,6 @@
       "when": 1750503105333,
       "tag": "0002_early_hobgoblin",
       "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1750505742066,
-      "tag": "0003_black_vector",
-      "breakpoints": true
     }
   ]
 }

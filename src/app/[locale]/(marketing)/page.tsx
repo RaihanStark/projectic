@@ -46,46 +46,15 @@ export default async function Index(props: IIndexProps) {
           </div>
           
           {/* Dashboard Preview */}
-          <div className="mt-20 max-w-5xl mx-auto">
+          <div className="mt-20 max-w-6xl mx-auto">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl transform rotate-1"></div>
-              <div className="relative bg-white rounded-2xl shadow-2xl border transform -rotate-1 hover:rotate-0 transition-transform duration-300">
-                <div className="bg-gray-100 rounded-t-2xl p-4 border-b">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <div className="ml-4 text-sm text-gray-600 font-medium">Projectic Dashboard</div>
-                  </div>
-                </div>
-                <div className="p-8">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200">
-                      <CheckCircle className="h-6 w-6 text-green-600" />
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900">Complete project documentation</div>
-                        <div className="text-sm text-gray-600">Due: Today</div>
-                      </div>
-                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">Done</span>
-                    </div>
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-                      <CheckCircle className="h-6 w-6 text-blue-600" />
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900">Review pull requests</div>
-                        <div className="text-sm text-gray-600">Due: Tomorrow</div>
-                      </div>
-                      <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium">In Progress</span>
-                    </div>
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
-                      <CheckCircle className="h-6 w-6 text-gray-400" />
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900">Plan next sprint</div>
-                        <div className="text-sm text-gray-600">Due: Next week</div>
-                      </div>
-                      <span className="bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-medium">Todo</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="relative transform -rotate-1 hover:rotate-0 transition-transform duration-300">
+                <img 
+                  src="/assets/images/hero.png" 
+                  alt="Projectic Dashboard Preview" 
+                  className="w-full h-auto rounded-2xl shadow-2xl border border-gray-200"
+                />
               </div>
             </div>
           </div>

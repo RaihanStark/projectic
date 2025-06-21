@@ -7,7 +7,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Development
 - `npm run dev` - Start development server with local database (PGlite)
 - `npm run dev:next` - Next.js dev server with Turbopack
-- `npm run dev:spotlight` - Sentry Spotlight for local debugging
 
 ### Build & Production
 - `npm run build` - Production build with in-memory database
@@ -86,4 +85,4 @@ Required for production:
 - Pre-commit hooks via Lefthook ensure code quality
 - All authentication flows are handled by Clerk
 - Arcjet provides bot detection and rate limiting by default
-- Sentry Spotlight enables local error monitoring in development
+- Sentry provides error monitoring and tracking

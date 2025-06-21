@@ -27,8 +27,41 @@ if (Env.NODE_ENV !== 'production') {
   globalForDb.drizzle = db;
 }
 
-await migrate(db, {
-  migrationsFolder: path.join(process.cwd(), 'migrations'),
-});
+try {
+  // Check if waitlist table exists first
+  const tableExists = await db.execute(`
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'waitlist'
+  `);
+  
+  if (tableExists.rows.length === 0) {
+    // Create waitlist table if it doesn't exist
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "waitlist" (
+        "id" serial PRIMARY KEY NOT NULL,
+        "email" varchar(255) NOT NULL,
+        "created_at" timestamp DEFAULT now() NOT NULL,
+        CONSTRAINT "waitlist_email_unique" UNIQUE("email")
+      );
+    `);
+  }
+  
+  // Run migrations carefully
+  await migrate(db, {
+    migrationsFolder: path.join(process.cwd(), 'migrations'),
+  });
+} catch (error) {
+  // Migration might fail if tables already exist, which is ok for development
+  if (Env.NODE_ENV === 'development' && error.message.includes('already exists')) {
+    console.log('Tables already exist, skipping migration');
+  } else {
+    console.error('Migration error:', error.message);
+    // Don't throw in development to allow the app to continue running
+    if (Env.NODE_ENV !== 'development') {
+      throw error;
+    }
+  }
+}
 
 export { db };

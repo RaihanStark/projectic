@@ -61,14 +61,6 @@ const Sidebar = () => {
           </nav>
         </div>
       </div>
-      <div className="mt-auto border-t border-gray-200 p-4">
-        <button
-          type="button"
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-100 px-4 py-2 text-red-700 shadow-sm hover:bg-red-200"
-        >
-          2 Issues
-        </button>
-      </div>
     </aside>
   );
 };

@@ -64,7 +64,7 @@ const statusClasses: { [key: string]: string } = {
 
 export default function Dashboard() {
   return (
-    <ul className="divide-y divide-gray-200">
+    <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-sm">
       {tasks.map(task => (
         <li
           key={task.id}

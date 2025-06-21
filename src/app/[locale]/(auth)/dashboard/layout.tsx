@@ -1,59 +1,34 @@
-import { SignOutButton } from '@clerk/nextjs';
-import { getTranslations, setRequestLocale } from 'next-intl/server';
-import Link from 'next/link';
-import { LocaleSwitcher } from '@/components/LocaleSwitcher';
-import { BaseTemplate } from '@/templates/BaseTemplate';
+import type { ReactNode } from 'react';
+import { auth } from '@clerk/nextjs/server';
+import { setRequestLocale } from 'next-intl/server';
+import { redirect } from 'next/navigation';
 
-export default async function DashboardLayout(props: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
+import Header from '@/components/dashboard/Header';
+import Sidebar from '@/components/dashboard/Sidebar';
+
+export default async function DashboardLayout({
+  children,
+  params: { locale },
+}: {
+  children: ReactNode;
+  params: { locale: string };
 }) {
-  const { locale } = await props.params;
   setRequestLocale(locale);
-  const t = await getTranslations({
-    locale,
-    namespace: 'DashboardLayout',
-  });
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect('/');
+  }
 
   return (
-    <BaseTemplate
-      leftNav={(
-        <>
-          <li>
-            <Link
-              href="/dashboard/"
-              className="border-none text-gray-700 hover:text-gray-900"
-            >
-              {t('dashboard_link')}
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/dashboard/user-profile/"
-              className="border-none text-gray-700 hover:text-gray-900"
-            >
-              {t('user_profile_link')}
-            </Link>
-          </li>
-        </>
-      )}
-      rightNav={(
-        <>
-          <li>
-            <SignOutButton>
-              <button className="border-none text-gray-700 hover:text-gray-900" type="button">
-                {t('sign_out')}
-              </button>
-            </SignOutButton>
-          </li>
-
-          <li>
-            <LocaleSwitcher />
-          </li>
-        </>
-      )}
-    >
-      {props.children}
-    </BaseTemplate>
+    <div className="grid min-h-screen w-full grid-cols-[auto_1fr]">
+      <Sidebar />
+      <div className="flex flex-col">
+        <Header />
+        <main className="flex-1 overflow-auto bg-gray-100/40 p-4">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }

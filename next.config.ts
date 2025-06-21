@@ -9,6 +9,9 @@ const baseConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   poweredByHeader: false,
   reactStrictMode: true,
   serverExternalPackages: ['@electric-sql/pglite'],

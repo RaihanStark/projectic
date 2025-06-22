@@ -40,7 +40,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const { title, description, label, status, urgency, deadline, isStarred } = body;
+    const { title, description, label, status, urgency, deadline } = body;
 
     // Check if task exists and belongs to user
     const existingTask = await db
@@ -62,7 +62,6 @@ export async function PUT(
         status: status || existingTask[0]?.status || 'todo',
         urgency: urgency || existingTask[0]?.urgency || 'medium',
         deadline: deadline ? new Date(deadline) : existingTask[0]?.deadline,
-        isStarred: isStarred !== undefined ? isStarred : existingTask[0]?.isStarred || false,
         updatedAt: new Date(),
       })
       .where(eq(tasksSchema.id, Number.parseInt(id)))

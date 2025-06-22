@@ -5,14 +5,13 @@ import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import {
   MoreVertical,
-  Star,
   Trash,
 } from 'lucide-react';
 import Link from 'next/link';
 
 import { useCallback, useEffect } from 'react';
 import { cn } from '@/utils/cn';
-import { deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName, toggleTaskStar } from '@/utils/taskUtils';
+import { deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 
 // Portal-based hover tooltip component
 const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
@@ -145,16 +144,6 @@ export default function Dashboard() {
     setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
   };
 
-  const handleToggleStar = async (id: number, currentStarred: boolean) => {
-    try {
-      const updatedTask = await toggleTaskStar(id, !currentStarred);
-      setTasks(tasks.map(task =>
-        task.id === id ? updatedTask : task,
-      ));
-    } catch (err) {
-      console.error('Error toggling star:', err);
-    }
-  };
 
   if (loading) {
     return (
@@ -212,22 +201,6 @@ export default function Dashboard() {
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
                   />
-                  <Tooltip text={task.isStarred ? 'Remove from favorites' : 'Add to favorites'}>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStar(task.id, task.isStarred)}
-                      className="flex-shrink-0"
-                    >
-                      <Star
-                        className={cn(
-                          'h-5 w-5',
-                          task.isStarred
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300 group-hover:text-yellow-400',
-                        )}
-                      />
-                    </button>
-                  </Tooltip>
                 </div>
 
                 {/* Task Content */}

@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
 import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, fetchSubTaskCounts, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
+import { truncateMarkdown } from '@/utils/markdown';
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
 import toast from 'react-hot-toast';
 
@@ -523,7 +524,7 @@ export default function Dashboard() {
                         ? "text-gray-400" 
                         : "text-gray-500"
                     )}>
-                      {task.description || 'No description'}
+                      {task.description ? truncateMarkdown(task.description, 120) : 'No description'}
                     </p>
                     {/* Sub-task progress indicator */}
                     {subTaskCounts[task.id] && (

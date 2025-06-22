@@ -17,6 +17,7 @@ import {
 import Link from 'next/link';
 import Dropdown, { type DropdownOption } from './Dropdown';
 import MarkdownEditor from './MarkdownEditor';
+import { useTaskStore } from '@/stores/taskStore';
 
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/utils/cn';
@@ -88,6 +89,9 @@ const urgencyConfig = {
 };
 
 const TaskDetail = (props: TaskDetailProps) => {
+  // Zustand store
+  const { updateSubTaskCount, updateTask: updateTaskInStore } = useTaskStore();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [task, setTask] = useState(props);
   const [loading, setLoading] = useState(false);
@@ -147,13 +151,9 @@ const TaskDetail = (props: TaskDetailProps) => {
     toast.success(`Sub-task ${newCompletedState ? 'completed' : 'marked as incomplete'}`);
 
     // Update dashboard sub-task counts optimistically
-    // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-    if (window.updateSubTaskCounts) {
-      const completedCount = subTasks.filter(st => st.completed).length + (newCompletedState ? 1 : -1);
-      const totalCount = subTasks.length;
-      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-      window.updateSubTaskCounts(task.id, completedCount, totalCount);
-    }
+    const completedCount = subTasks.filter(st => st.completed).length + (newCompletedState ? 1 : -1);
+    const totalCount = subTasks.length;
+    updateSubTaskCount(task.id, completedCount, totalCount);
 
     try {
       await updateSubTask(task.id, id, { 
@@ -166,13 +166,9 @@ const TaskDetail = (props: TaskDetailProps) => {
       ));
       
       // Rollback dashboard counts
-      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-      if (window.updateSubTaskCounts) {
-        const completedCount = subTasks.filter(st => st.completed).length;
-        const totalCount = subTasks.length;
-        // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-        window.updateSubTaskCounts(task.id, completedCount, totalCount);
-      }
+      const completedCount = subTasks.filter(st => st.completed).length;
+      const totalCount = subTasks.length;
+      updateSubTaskCount(task.id, completedCount, totalCount);
 
       console.error('Error updating sub-task:', err);
       setError('Failed to update sub-task');
@@ -191,13 +187,9 @@ const TaskDetail = (props: TaskDetailProps) => {
       setNewSubTaskTitle('');
       
       // Update dashboard sub-task counts
-      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-      if (window.updateSubTaskCounts) {
-        const completedCount = subTasks.filter(st => st.completed).length;
-        const totalCount = subTasks.length + 1; // +1 for the new sub-task
-        // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-        window.updateSubTaskCounts(task.id, completedCount, totalCount);
-      }
+      const completedCount = subTasks.filter(st => st.completed).length;
+      const totalCount = subTasks.length + 1; // +1 for the new sub-task
+      updateSubTaskCount(task.id, completedCount, totalCount);
       
       toast.success('Sub-task added successfully');
     } catch (err) {
@@ -217,13 +209,9 @@ const TaskDetail = (props: TaskDetailProps) => {
     toast.success('Sub-task deleted successfully');
 
     // Update dashboard sub-task counts optimistically
-    // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-    if (window.updateSubTaskCounts) {
-      const completedCount = subTasks.filter(st => st.completed && st.id !== id).length;
-      const totalCount = subTasks.length - 1; // -1 for the deleted sub-task
-      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-      window.updateSubTaskCounts(task.id, completedCount, totalCount);
-    }
+    const completedCount = subTasks.filter(st => st.completed && st.id !== id).length;
+    const totalCount = subTasks.length - 1; // -1 for the deleted sub-task
+    updateSubTaskCount(task.id, completedCount, totalCount);
 
     try {
       await deleteSubTask(task.id, id);
@@ -238,13 +226,9 @@ const TaskDetail = (props: TaskDetailProps) => {
       });
       
       // Rollback dashboard counts
-      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-      if (window.updateSubTaskCounts) {
-        const completedCount = subTasks.filter(st => st.completed).length;
-        const totalCount = subTasks.length;
-        // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
-        window.updateSubTaskCounts(task.id, completedCount, totalCount);
-      }
+      const completedCount = subTasks.filter(st => st.completed).length;
+      const totalCount = subTasks.length;
+      updateSubTaskCount(task.id, completedCount, totalCount);
       
       console.error('Error deleting sub-task:', err);
       setError('Failed to delete sub-task');
@@ -292,6 +276,7 @@ const TaskDetail = (props: TaskDetailProps) => {
       };
 
       await updateTask(task.id, updateData);
+      updateTaskInStore(task.id, task);
       setIsEditing(false);
       toast.success('Task updated successfully');
     } catch (err) {

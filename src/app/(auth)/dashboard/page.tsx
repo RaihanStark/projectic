@@ -18,6 +18,7 @@ import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, fetchSub
 import { truncateMarkdown } from '@/utils/markdown';
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
 import TaskListSkeleton from '@/components/TaskListSkeleton';
+import { useTaskStore } from '@/stores/taskStore';
 import toast from 'react-hot-toast';
 
 // Portal-based hover tooltip component
@@ -103,9 +104,21 @@ const statusConfig = {
 };
 
 export default function Dashboard() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Zustand store
+  const {
+    tasks,
+    subTaskCounts,
+    loading,
+    error,
+    setTasks,
+    setSubTaskCounts,
+    setLoading,
+    setError,
+    deleteTask: deleteTaskFromStore,
+    deleteTasks: deleteTasksFromStore,
+    updateTask,
+    getTaskCount
+  } = useTaskStore();
   const [activeTab, setActiveTab] = useState<'all' | 'todo' | 'in-progress' | 'done' | 'cancelled'>('all');
   const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; taskId: number | null; taskTitle: string }>({
@@ -138,9 +151,6 @@ export default function Dashboard() {
     { value: 'critical', label: 'Critical', icon: AlertTriangle, iconClassName: 'text-red-500' },
   ];
 
-  // Sub-task counts state
-  const [subTaskCounts, setSubTaskCounts] = useState<{ [taskId: number]: { completed: number; total: number } }>({});
-
   const loadTasks = useCallback(async () => {
     try {
       setLoading(true);
@@ -162,38 +172,20 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setLoading, setTasks, setSubTaskCounts, setError]);
 
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
 
-  // Expose refresh function and sub-task count updates to parent components
+  // Expose refresh function to parent components
   useEffect(() => {
     // @ts-expect-error: Adding refreshTasks to window for dashboard refresh
     window.refreshTasks = loadTasks;
     
-    // Function to update individual sub-task counts without full reload
-    // @ts-expect-error: Adding updateSubTaskCounts to window for sub-task updates
-    window.updateSubTaskCounts = (taskId: number, completed: number, total: number) => {
-      setSubTaskCounts(prev => {
-        if (total === 0) {
-          // Remove the task from sub-task counts when no sub-tasks exist
-          const { [taskId]: removed, ...rest } = prev;
-          return rest;
-        }
-        return {
-          ...prev,
-          [taskId]: { completed, total }
-        };
-      });
-    };
-    
     return () => {
-      // @ts-expect-error: Removing functions from window
+      // @ts-expect-error: Removing refreshTasks from window
       delete window.refreshTasks;
-      // @ts-expect-error: Removing functions from window
-      delete window.updateSubTaskCounts;
     };
   }, [loadTasks]);
 
@@ -212,12 +204,11 @@ export default function Dashboard() {
 
     try {
       await deleteTask(deleteConfirm.taskId);
-      const updatedTasks = tasks.filter(task => task.id !== deleteConfirm.taskId);
-      setTasks(updatedTasks);
+      deleteTaskFromStore(deleteConfirm.taskId);
       // @ts-expect-error: Accessing updateTaskCount on window for task count updates
       if (window.updateTaskCount) {
         // @ts-expect-error: Accessing updateTaskCount on window for task count updates
-        window.updateTaskCount(updatedTasks.length);
+        window.updateTaskCount(getTaskCount());
       }
       setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
       toast.success(`Task "${deleteConfirm.taskTitle}" deleted successfully`);
@@ -298,12 +289,11 @@ export default function Dashboard() {
 
     try {
       await bulkDeleteTasks(bulkDeleteConfirm.taskIds);
-      const updatedTasks = tasks.filter(task => !bulkDeleteConfirm.taskIds.includes(task.id));
-      setTasks(updatedTasks);
+      deleteTasksFromStore(bulkDeleteConfirm.taskIds);
       // @ts-expect-error: Accessing updateTaskCount on window for task count updates
       if (window.updateTaskCount) {
         // @ts-expect-error: Accessing updateTaskCount on window for task count updates
-        window.updateTaskCount(updatedTasks.length);
+        window.updateTaskCount(getTaskCount());
       }
       setSelectedTasks(new Set());
       setBulkDeleteConfirm({ isOpen: false, taskIds: [], taskTitles: [] });
@@ -325,13 +315,10 @@ export default function Dashboard() {
     try {
       const updatedTasks = await bulkUpdateTaskStatus(taskIds, newStatus);
       
-      // Update the tasks in state
-      setTasks(prevTasks => 
-        prevTasks.map(task => {
-          const updatedTask = updatedTasks.find(updated => updated.id === task.id);
-          return updatedTask || task;
-        })
-      );
+      // Update the tasks in store
+      updatedTasks.forEach(updatedTask => {
+        updateTask(updatedTask.id, updatedTask);
+      });
       
       // Clear selections after successful update
       setSelectedTasks(new Set());
@@ -560,7 +547,7 @@ export default function Dashboard() {
                                 task.status === 'done' ? "bg-gray-400" : "bg-green-500"
                               )}
                               style={{ 
-                                width: `${subTaskCounts[task.id].total > 0 ? (subTaskCounts[task.id].completed / subTaskCounts[task.id].total) * 100 : 0}%` 
+                                width: `${subTaskCounts[task.id]?.total > 0 ? (subTaskCounts[task.id].completed / subTaskCounts[task.id].total) * 100 : 0}%` 
                               }}
                             ></div>
                           </div>
@@ -568,7 +555,7 @@ export default function Dashboard() {
                             "text-xs font-medium",
                             task.status === 'done' ? "text-gray-400" : "text-gray-600"
                           )}>
-                            {subTaskCounts[task.id].completed}/{subTaskCounts[task.id].total} subtasks
+                            {subTaskCounts[task.id]?.completed}/{subTaskCounts[task.id]?.total} subtasks
                           </span>
                         </div>
                       </div>

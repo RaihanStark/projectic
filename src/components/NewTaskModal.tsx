@@ -5,6 +5,7 @@ import type { CreateTaskData } from '@/utils/taskUtils';
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import MarkdownEditor from './MarkdownEditor';
+import { useTaskStore } from '@/stores/taskStore';
 import { createTask } from '@/utils/taskUtils';
 import toast from 'react-hot-toast';
 
@@ -15,6 +16,9 @@ type NewTaskModalProps = {
 };
 
 const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
+  // Zustand store
+  const { addTask } = useTaskStore();
+  
   const [task, setTask] = useState({
     title: '',
     description: '',
@@ -56,6 +60,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
       };
 
       const newTask = await createTask(taskData);
+      addTask(newTask);
       onSubmit(newTask);
       onClose();
       toast.success(`Task "${task.title}" created successfully`);

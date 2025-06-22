@@ -170,14 +170,28 @@ const TaskDetail = (props: TaskDetailProps) => {
   };
 
   const handleDeleteSubTask = async (id: number) => {
+    // Store the sub-task for potential rollback
+    const subTaskToDelete = subTasks.find(st => st.id === id);
+    if (!subTaskToDelete) return;
+
+    // Optimistic update - immediately remove from UI
+    setSubTasks(prev => prev.filter(subTask => subTask.id !== id));
+    toast.success('Sub-task deleted successfully');
+
     try {
       await deleteSubTask(task.id, id);
-      setSubTasks(prev => prev.filter(subTask => subTask.id !== id));
-      toast.success('Sub-task deleted successfully');
     } catch (err) {
+      // Rollback on error - restore the deleted sub-task
+      setSubTasks(prev => {
+        const newSubTasks = [...prev, subTaskToDelete];
+        // Re-sort by creation date to maintain original order
+        return newSubTasks.sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
       console.error('Error deleting sub-task:', err);
       setError('Failed to delete sub-task');
-      toast.error('Failed to delete sub-task');
+      toast.error('Failed to delete sub-task. Restored sub-task.');
     }
   };
 

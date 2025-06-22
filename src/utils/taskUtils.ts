@@ -77,6 +77,19 @@ export async function deleteTask(id: number): Promise<void> {
   }
 }
 
+export async function bulkDeleteTasks(taskIds: number[]): Promise<void> {
+  const response = await fetch(`${API_BASE}/bulk-delete`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ taskIds }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete tasks');
+  }
+}
+
 export function formatDate(date: Date | string | null): string {
   if (!date) {
     return '';

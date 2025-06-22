@@ -9,7 +9,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
-import { deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
+import { bulkDeleteTasks, deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 
 // Portal-based hover tooltip component
 const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
@@ -75,10 +75,16 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'todo' | 'in-progress' | 'done' | 'cancelled'>('all');
+  const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; taskId: number | null; taskTitle: string }>({
     isOpen: false,
     taskId: null,
     taskTitle: '',
+  });
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState<{ isOpen: boolean; taskIds: number[]; taskTitles: string[] }>({
+    isOpen: false,
+    taskIds: [],
+    taskTitles: [],
   });
 
   const loadTasks = useCallback(async () => {
@@ -160,6 +166,63 @@ export default function Dashboard() {
     cancelled: tasks.filter(t => t.status === 'cancelled').length,
   };
 
+  // Bulk action handlers
+  const handleSelectTask = (taskId: number, checked: boolean) => {
+    const newSelected = new Set(selectedTasks);
+    if (checked) {
+      newSelected.add(taskId);
+    } else {
+      newSelected.delete(taskId);
+    }
+    setSelectedTasks(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedTasks(new Set(filteredTasks.map(task => task.id)));
+    } else {
+      setSelectedTasks(new Set());
+    }
+  };
+
+  const handleBulkDelete = () => {
+    const taskIds = Array.from(selectedTasks);
+    const taskTitles = tasks
+      .filter(task => taskIds.includes(task.id))
+      .map(task => task.title);
+    
+    setBulkDeleteConfirm({
+      isOpen: true,
+      taskIds,
+      taskTitles,
+    });
+  };
+
+  const confirmBulkDelete = async () => {
+    if (bulkDeleteConfirm.taskIds.length === 0) {
+      return;
+    }
+
+    try {
+      await bulkDeleteTasks(bulkDeleteConfirm.taskIds);
+      const updatedTasks = tasks.filter(task => !bulkDeleteConfirm.taskIds.includes(task.id));
+      setTasks(updatedTasks);
+      // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+      if (window.updateTaskCount) {
+        // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+        window.updateTaskCount(updatedTasks.length);
+      }
+      setSelectedTasks(new Set());
+      setBulkDeleteConfirm({ isOpen: false, taskIds: [], taskTitles: [] });
+    } catch (err) {
+      console.error('Error bulk deleting tasks:', err);
+    }
+  };
+
+  const cancelBulkDelete = () => {
+    setBulkDeleteConfirm({ isOpen: false, taskIds: [], taskTitles: [] });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -203,6 +266,28 @@ export default function Dashboard() {
   return (
     <div className="w-full overflow-hidden">
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+        {/* Gmail-style Select Bar */}
+        <div className="flex items-center px-4 py-3 border-b border-gray-200 min-h-[50px]">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={filteredTasks.length > 0 && selectedTasks.size === filteredTasks.length}
+              onChange={(e) => handleSelectAll(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            {selectedTasks.size > 0 && (
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                title="Delete selected"
+              >
+                <Trash className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Gmail-style Integrated Tabs */}
         <div className="border-b border-gray-200">
           <nav className="flex" aria-label="Tabs">
@@ -215,7 +300,10 @@ export default function Dashboard() {
             ].map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                onClick={() => {
+                  setActiveTab(tab.key as typeof activeTab);
+                  setSelectedTasks(new Set()); // Clear selections when switching tabs
+                }}
                 className={cn(
                   'relative flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2',
                   activeTab === tab.key
@@ -262,7 +350,9 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3 mt-1">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
+                    checked={selectedTasks.has(task.id)}
+                    onChange={(e) => handleSelectTask(task.id, e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                   />
                 </div>
 
@@ -363,6 +453,46 @@ export default function Dashboard() {
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {bulkDeleteConfirm.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete {bulkDeleteConfirm.taskIds.length} Task{bulkDeleteConfirm.taskIds.length > 1 ? 's' : ''}
+            </h3>
+            <div className="text-gray-600 mb-6">
+              <p className="mb-3">Are you sure you want to delete these tasks? This action cannot be undone.</p>
+              <div className="bg-gray-50 rounded-md p-3 max-h-32 overflow-y-auto">
+                <ul className="text-sm space-y-1">
+                  {bulkDeleteConfirm.taskTitles.map((title, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-gray-400 font-mono text-xs mt-0.5">•</span>
+                      <span className="text-gray-700">{title}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={cancelBulkDelete}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmBulkDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                Delete {bulkDeleteConfirm.taskIds.length} Task{bulkDeleteConfirm.taskIds.length > 1 ? 's' : ''}
               </button>
             </div>
           </div>

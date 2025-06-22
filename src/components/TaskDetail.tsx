@@ -1,6 +1,6 @@
 'use client';
 
-import type { UpdateTaskData } from '@/utils/taskUtils';
+import type { UpdateTaskData, SubTask, CreateSubTaskData, UpdateSubTaskData } from '@/utils/taskUtils';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -8,16 +8,19 @@ import {
   CheckCircle,
   Circle,
   Clock,
+  Plus,
   Pencil,
   Tag,
+  Trash2,
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import Dropdown, { type DropdownOption } from './Dropdown';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/utils/cn';
-import { updateTask } from '@/utils/taskUtils';
+import { updateTask, fetchSubTasks, createSubTask, updateSubTask, deleteSubTask } from '@/utils/taskUtils';
+import toast from 'react-hot-toast';
 
 type TaskDetailProps = {
   id: number;
@@ -88,6 +91,11 @@ const TaskDetail = (props: TaskDetailProps) => {
   const [task, setTask] = useState(props);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Sub-tasks state
+  const [subTasks, setSubTasks] = useState<SubTask[]>([]);
+  const [newSubTaskTitle, setNewSubTaskTitle] = useState('');
+  const [subTasksLoading, setSubTasksLoading] = useState(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -103,6 +111,92 @@ const TaskDetail = (props: TaskDetailProps) => {
   const handleUrgencyChange = (newUrgency: 'low' | 'medium' | 'high' | 'critical') => {
     setTask(prev => ({ ...prev, urgency: newUrgency }));
   };
+
+  // Load sub-tasks
+  const loadSubTasks = useCallback(async () => {
+    try {
+      setSubTasksLoading(true);
+      const fetchedSubTasks = await fetchSubTasks(task.id);
+      setSubTasks(fetchedSubTasks);
+    } catch (err) {
+      console.error('Error loading sub-tasks:', err);
+      setError('Failed to load sub-tasks');
+      toast.error('Failed to load sub-tasks');
+    } finally {
+      setSubTasksLoading(false);
+    }
+  }, [task.id]);
+
+  // Load sub-tasks on component mount
+  useEffect(() => {
+    loadSubTasks();
+  }, [loadSubTasks]);
+
+  // Sub-task functions
+  const handleSubTaskToggle = async (id: number) => {
+    const subTask = subTasks.find(st => st.id === id);
+    if (!subTask) return;
+
+    try {
+      const updatedSubTask = await updateSubTask(task.id, id, { 
+        completed: !subTask.completed 
+      });
+      setSubTasks(prev => prev.map(st => 
+        st.id === id ? updatedSubTask : st
+      ));
+      toast.success(`Sub-task ${updatedSubTask.completed ? 'completed' : 'marked as incomplete'}`);
+    } catch (err) {
+      console.error('Error updating sub-task:', err);
+      setError('Failed to update sub-task');
+      toast.error('Failed to update sub-task');
+    }
+  };
+
+  const handleAddSubTask = async () => {
+    if (!newSubTaskTitle.trim()) return;
+
+    try {
+      const newSubTask = await createSubTask(task.id, { 
+        title: newSubTaskTitle.trim() 
+      });
+      setSubTasks(prev => [...prev, newSubTask]);
+      setNewSubTaskTitle('');
+      toast.success('Sub-task added successfully');
+    } catch (err) {
+      console.error('Error creating sub-task:', err);
+      setError('Failed to create sub-task');
+      toast.error('Failed to create sub-task');
+    }
+  };
+
+  const handleDeleteSubTask = async (id: number) => {
+    // Store the sub-task for potential rollback
+    const subTaskToDelete = subTasks.find(st => st.id === id);
+    if (!subTaskToDelete) return;
+
+    // Optimistic update - immediately remove from UI
+    setSubTasks(prev => prev.filter(subTask => subTask.id !== id));
+    toast.success('Sub-task deleted successfully');
+
+    try {
+      await deleteSubTask(task.id, id);
+    } catch (err) {
+      // Rollback on error - restore the deleted sub-task
+      setSubTasks(prev => {
+        const newSubTasks = [...prev, subTaskToDelete];
+        // Re-sort by creation date to maintain original order
+        return newSubTasks.sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
+      console.error('Error deleting sub-task:', err);
+      setError('Failed to delete sub-task');
+      toast.error('Failed to delete sub-task. Restored sub-task.');
+    }
+  };
+
+  const completedSubTasks = subTasks.filter(st => st.completed).length;
+  const totalSubTasks = subTasks.length;
 
   // Convert config objects to dropdown options
   const statusOptions: DropdownOption[] = Object.entries(statusConfig).map(([key, config]) => ({
@@ -123,6 +217,13 @@ const TaskDetail = (props: TaskDetailProps) => {
     setLoading(true);
     setError(null);
 
+    // Form validation
+    if (!task.title.trim()) {
+      toast.error('Task title is required');
+      setLoading(false);
+      return;
+    }
+
     try {
       const updateData: UpdateTaskData = {
         title: task.title,
@@ -135,8 +236,10 @@ const TaskDetail = (props: TaskDetailProps) => {
 
       await updateTask(task.id, updateData);
       setIsEditing(false);
+      toast.success('Task updated successfully');
     } catch (err) {
       setError('Failed to update task. Please try again.');
+      toast.error('Failed to update task');
       console.error('Error updating task:', err);
     } finally {
       setLoading(false);
@@ -253,7 +356,7 @@ const TaskDetail = (props: TaskDetailProps) => {
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6">
             {/* Description Card */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
@@ -288,6 +391,110 @@ const TaskDetail = (props: TaskDetailProps) => {
                       )}
                     </div>
                   )}
+            </div>
+
+            {/* Sub-tasks Card */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Sub-tasks
+                  </h2>
+                  {totalSubTasks > 0 && (
+                    <span className="text-sm text-gray-500">
+                      ({completedSubTasks}/{totalSubTasks} completed)
+                    </span>
+                  )}
+                </div>
+                {totalSubTasks > 0 && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(completedSubTasks / totalSubTasks) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {Math.round((completedSubTasks / totalSubTasks) * 100)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Add new sub-task */}
+              <div className="mb-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSubTaskTitle}
+                    onChange={(e) => setNewSubTaskTitle(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddSubTask()}
+                    placeholder="Add a sub-task..."
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleAddSubTask}
+                    disabled={!newSubTaskTitle.trim()}
+                    className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* Sub-tasks list */}
+              <div className="space-y-2">
+                {subTasks.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <CheckCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No sub-tasks yet. Add one above to get started!</p>
+                  </div>
+                ) : (
+                  subTasks.map((subTask) => (
+                    <div
+                      key={subTask.id}
+                      className={cn(
+                        "flex items-center gap-3 p-3 rounded-lg border transition-all group hover:bg-gray-50",
+                        subTask.completed 
+                          ? "border-green-200 bg-green-50/50" 
+                          : "border-gray-200 bg-white"
+                      )}
+                    >
+                      <button
+                        onClick={() => handleSubTaskToggle(subTask.id)}
+                        className={cn(
+                          "flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                          subTask.completed
+                            ? "bg-green-500 border-green-500 text-white"
+                            : "border-gray-300 hover:border-green-400"
+                        )}
+                      >
+                        {subTask.completed && <CheckCircle className="h-3 w-3" />}
+                      </button>
+                      <span
+                        className={cn(
+                          "flex-1 text-sm",
+                          subTask.completed
+                            ? "text-gray-500 line-through"
+                            : "text-gray-900"
+                        )}
+                      >
+                        {subTask.title}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteSubTask(subTask.id)}
+                        className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-gray-400 hover:text-red-500 transition-all rounded"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
 

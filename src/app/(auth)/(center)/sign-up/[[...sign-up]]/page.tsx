@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -18,6 +19,23 @@ export default function SignUpPage() {
     setError(null);
     setLoading(true);
 
+    // Form validation
+    if (!email.trim()) {
+      toast.error('Email is required');
+      setLoading(false);
+      return;
+    }
+    if (!password.trim()) {
+      toast.error('Password is required');
+      setLoading(false);
+      return;
+    }
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/sign-up', {
         method: 'POST',
@@ -29,13 +47,16 @@ export default function SignUpPage() {
 
       if (!response.ok) {
         setError(data.error || 'Failed to sign up');
+        toast.error(data.error || 'Failed to sign up');
         return;
       }
 
+      toast.success('Account created successfully! Redirecting...');
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (err) {
       setError('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

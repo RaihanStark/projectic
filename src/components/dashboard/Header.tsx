@@ -3,6 +3,7 @@
 import { Bell, LogOut, Search, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const Header = () => {
   const router = useRouter();
@@ -28,9 +29,11 @@ const Header = () => {
   const handleSignOut = async () => {
     try {
       await fetch('/api/auth/sign-out', { method: 'POST' });
+      toast.success('Signed out successfully');
       router.push('/sign-in');
     } catch (error) {
       console.error('Failed to sign out:', error);
+      toast.error('Failed to sign out');
     }
   };
 

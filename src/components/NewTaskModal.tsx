@@ -5,6 +5,7 @@ import type { CreateTaskData } from '@/utils/taskUtils';
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import { createTask } from '@/utils/taskUtils';
+import toast from 'react-hot-toast';
 
 type NewTaskModalProps = {
   isOpen: boolean;
@@ -36,6 +37,13 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
     setLoading(true);
     setError(null);
 
+    // Form validation
+    if (!task.title.trim()) {
+      toast.error('Task title is required');
+      setLoading(false);
+      return;
+    }
+
     try {
       const taskData: CreateTaskData = {
         title: task.title,
@@ -49,6 +57,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
       const newTask = await createTask(taskData);
       onSubmit(newTask);
       onClose();
+      toast.success(`Task "${task.title}" created successfully`);
 
       // Reset form
       setTask({
@@ -61,6 +70,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
       });
     } catch (err) {
       setError('Failed to create task. Please try again.');
+      toast.error('Failed to create task');
       console.error('Error creating task:', err);
     } finally {
       setLoading(false);

@@ -41,7 +41,19 @@ export const tasksSchema = pgTable('tasks', {
   status: varchar('status', { length: 20 }).notNull().default('todo'), // todo, in-progress, done, cancelled
   urgency: varchar('urgency', { length: 20 }).notNull().default('medium'), // low, medium, high, critical
   deadline: timestamp('deadline', { mode: 'date' }),
-  isStarred: boolean('is_starred').default(false),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+});
+
+export const subTasksSchema = pgTable('subtasks', {
+  id: serial('id').primaryKey(),
+  taskId: integer('task_id').notNull().references(() => tasksSchema.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  completed: boolean('completed').notNull().default(false),
+  order: integer('order').notNull().default(0), // For ordering sub-tasks
   updatedAt: timestamp('updated_at', { mode: 'date' })
     .defaultNow()
     .$onUpdate(() => new Date())

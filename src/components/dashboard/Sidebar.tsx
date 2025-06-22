@@ -13,6 +13,7 @@ import { useState } from 'react';
 type SidebarProps = {
   onNewTaskClick: () => void;
   onNewProjectClick?: () => void;
+  taskCount?: number;
 };
 
 // Mock project data for UI display
@@ -57,7 +58,7 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick }: SidebarProps) => {
             <Home className="h-4 w-4" />
             All Tasks
             <span className="ml-auto flex h-6 w-9 items-center justify-center rounded-full bg-gray-200 text-xs">
-              24
+              {taskCount}
             </span>
           </Link>
           <Link

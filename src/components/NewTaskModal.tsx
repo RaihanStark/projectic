@@ -4,7 +4,10 @@ import type { FormEvent } from 'react';
 import type { CreateTaskData } from '@/utils/taskUtils';
 import { X, Circle } from 'lucide-react';
 import { useState } from 'react';
+import MarkdownEditor from './MarkdownEditor';
+import { useTaskStore } from '@/stores/taskStore';
 import { createTask } from '@/utils/taskUtils';
+import toast from 'react-hot-toast';
 
 type NewTaskModalProps = {
   isOpen: boolean;
@@ -21,6 +24,9 @@ const mockProjects = [
 ];
 
 const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskModalProps) => {
+  // Zustand store
+  const { addTask } = useTaskStore();
+  
   const [task, setTask] = useState({
     title: '',
     description: '',
@@ -45,6 +51,13 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskM
     setLoading(true);
     setError(null);
 
+    // Form validation
+    if (!task.title.trim()) {
+      toast.error('Task title is required');
+      setLoading(false);
+      return;
+    }
+
     try {
       const taskData: CreateTaskData = {
         title: task.title,
@@ -56,8 +69,10 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskM
       };
 
       const newTask = await createTask(taskData);
+      addTask(newTask);
       onSubmit(newTask);
       onClose();
+      toast.success(`Task "${task.title}" created successfully`);
 
       // Reset form
       setTask({
@@ -71,6 +86,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskM
       });
     } catch (err) {
       setError('Failed to create task. Please try again.');
+      toast.error('Failed to create task');
       console.error('Error creating task:', err);
     } finally {
       setLoading(false);
@@ -127,15 +143,12 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskM
             <label htmlFor="description" className={labelStyles}>
               Description
             </label>
-            <textarea
-              id="description"
-              name="description"
+            <MarkdownEditor
               value={task.description}
-              onChange={handleInputChange}
-              className={inputStyles}
+              onChange={(value) => setTask(prev => ({ ...prev, description: value }))}
               placeholder="Add a more detailed description..."
-              rows={4}
               disabled={loading}
+              height={200}
             />
           </div>
 

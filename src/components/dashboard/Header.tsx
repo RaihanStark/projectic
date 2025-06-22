@@ -2,7 +2,8 @@
 
 import { Bell, LogOut, Search, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const Header = () => {
   const router = useRouter();
@@ -28,18 +29,17 @@ const Header = () => {
   const handleSignOut = async () => {
     try {
       await fetch('/api/auth/sign-out', { method: 'POST' });
+      toast.success('Signed out successfully');
       router.push('/sign-in');
     } catch (error) {
       console.error('Failed to sign out:', error);
+      toast.error('Failed to sign out');
     }
   };
 
   return (
     <header className="flex h-16 shrink-0 items-center border-b border-gray-200 bg-white px-6">
-      <div className="flex items-center gap-4">
-        <h1 className="text-xl font-semibold">Tasks</h1>
-      </div>
-      <div className="relative ml-auto w-full max-w-md">
+      <div className="relative w-full max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
         <input
           type="search"

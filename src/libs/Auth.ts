@@ -1,20 +1,21 @@
+import type { NextRequest } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { eq } from 'drizzle-orm';
 import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { db } from './DB';
+import { NextResponse } from 'next/server';
 import { usersSchema } from '@/models/Schema';
-import { eq } from 'drizzle-orm';
+import { db } from './DB';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
+  process.env.JWT_SECRET || 'your-secret-key-change-this-in-production',
 );
 
-export interface UserPayload {
+export type UserPayload = {
   id: number;
   email: string;
   name?: string;
-}
+};
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
@@ -35,7 +36,15 @@ export async function createToken(payload: UserPayload): Promise<string> {
 export async function verifyToken(token: string): Promise<UserPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as UserPayload;
+    // Ensure the payload has the required fields
+    if ('id' in payload && 'email' in payload && typeof payload.email === 'string') {
+      return {
+        id: typeof payload.id === 'number' ? payload.id : Number(payload.id),
+        email: payload.email,
+        name: typeof payload.name === 'string' ? payload.name : undefined,
+      };
+    }
+    return null;
   } catch {
     return null;
   }
@@ -61,7 +70,7 @@ export async function getAuthUser(request?: NextRequest): Promise<UserPayload | 
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
-    
+
     if (!token) {
       // If we have a request object, check the Authorization header
       if (request) {
@@ -73,7 +82,7 @@ export async function getAuthUser(request?: NextRequest): Promise<UserPayload | 
       }
       return null;
     }
-    
+
     return verifyToken(token);
   } catch {
     return null;
@@ -94,7 +103,7 @@ export async function getUserById(id: number) {
     .from(usersSchema)
     .where(eq(usersSchema.id, id))
     .limit(1);
-  
+
   return users[0] || null;
 }
 
@@ -104,7 +113,7 @@ export async function getUserByEmail(email: string) {
     .from(usersSchema)
     .where(eq(usersSchema.email, email))
     .limit(1);
-  
+
   return users[0] || null;
 }
 

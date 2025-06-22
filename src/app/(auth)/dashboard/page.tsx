@@ -126,6 +126,16 @@ export default function Dashboard() {
     iconClassName: config.iconClassName,
   }));
 
+  // Urgency filter state and options
+  const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
+  const urgencyOptions: DropdownOption[] = [
+    { value: 'all', label: 'All Urgencies', icon: AlertTriangle, iconClassName: 'text-gray-500' },
+    { value: 'low', label: 'Low', icon: AlertTriangle, iconClassName: 'text-green-500' },
+    { value: 'medium', label: 'Medium', icon: AlertTriangle, iconClassName: 'text-yellow-500' },
+    { value: 'high', label: 'High', icon: AlertTriangle, iconClassName: 'text-orange-500' },
+    { value: 'critical', label: 'Critical', icon: AlertTriangle, iconClassName: 'text-red-500' },
+  ];
+
   // Sub-task counts state
   const [subTaskCounts, setSubTaskCounts] = useState<{ [taskId: number]: { completed: number; total: number } }>({});
 
@@ -200,11 +210,14 @@ export default function Dashboard() {
     setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
   };
 
-  // Filter and sort tasks based on active tab
+  // Filter and sort tasks based on active tab and urgency filter
   const filteredTasks = tasks
     .filter(task => {
-      if (activeTab === 'all') return true;
-      return task.status === activeTab;
+      // Filter by status tab
+      if (activeTab !== 'all' && task.status !== activeTab) return false;
+      // Filter by urgency
+      if (urgencyFilter !== 'all' && task.urgency !== urgencyFilter) return false;
+      return true;
     })
     .sort((a, b) => {
       // For "All Tasks" tab, move done tasks to bottom
@@ -396,10 +409,23 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Selection Count */}
-          {selectedTasks.size > 0 && (
+          {/* Right side - Selection Count OR Urgency Filter */}
+          {selectedTasks.size > 0 ? (
             <div className="text-sm text-gray-600">
               {selectedTasks.size} of {filteredTasks.length} selected
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Dropdown
+                value={urgencyFilter}
+                onChange={(value) => {
+                  setUrgencyFilter(value);
+                  setSelectedTasks(new Set()); // Clear selections when filtering
+                }}
+                options={urgencyOptions}
+                size="sm"
+                className="border-gray-300 hover:bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
           )}
         </div>
@@ -419,6 +445,7 @@ export default function Dashboard() {
                 onClick={() => {
                   setActiveTab(tab.key as typeof activeTab);
                   setSelectedTasks(new Set()); // Clear selections when switching tabs
+                  setUrgencyFilter('all'); // Reset urgency filter when switching tabs
                 }}
                 className={cn(
                   'relative flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2',

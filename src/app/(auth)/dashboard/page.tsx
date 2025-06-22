@@ -424,6 +424,7 @@ export default function Dashboard() {
                 }}
                 options={urgencyOptions}
                 size="sm"
+                anchor="auto"
                 className="border-gray-300 hover:bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>

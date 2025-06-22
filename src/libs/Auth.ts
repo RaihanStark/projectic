@@ -35,7 +35,15 @@ export async function createToken(payload: UserPayload): Promise<string> {
 export async function verifyToken(token: string): Promise<UserPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as UserPayload;
+    // Ensure the payload has the required fields
+    if ('id' in payload && 'email' in payload && typeof payload.email === 'string') {
+      return {
+        id: typeof payload.id === 'number' ? payload.id : Number(payload.id),
+        email: payload.email,
+        name: typeof payload.name === 'string' ? payload.name : undefined,
+      };
+    }
+    return null;
   } catch {
     return null;
   }

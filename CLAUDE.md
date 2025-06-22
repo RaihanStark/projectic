@@ -20,9 +20,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Testing
 - `npm run test` - Run unit tests with Vitest
-- `npm run test:e2e` - Run E2E tests with Playwright (run `npx playwright install` first time)
-- `npm run storybook` - Start Storybook for component development
-- `npm run storybook:test` - Run Storybook tests
 
 ### Database
 - `npm run db:generate` - Generate Drizzle migrations after schema changes
@@ -35,54 +32,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Framework**: Next.js 15.3.4 with App Router
 - **Language**: TypeScript with strict mode
 - **Styling**: Tailwind CSS 4.1.10
-- **Authentication**: Clerk (complete auth solution)
+- **Authentication**: JWT-based authentication (custom implementation)
 - **Database**: Drizzle ORM with PostgreSQL (PGlite for local dev)
 - **Forms**: React Hook Form with Zod validation
-- **Internationalization**: next-intl with Crowdin
-- **Monitoring**: Sentry (errors), PostHog (analytics), Checkly (uptime), Better Stack (logging)
-- **Security**: Arcjet (bot protection, rate limiting)
 
 ### Project Structure
-- `/src/app/[locale]` - Next.js App Router with i18n support
+- `/src/app` - Next.js App Router
   - `(auth)` - Authentication pages (sign-in, sign-up, etc.)
   - `(marketing)` - Public marketing pages
 - `/src/components` - Reusable React components
-- `/src/libs` - Third-party library configurations (Arcjet, DB, i18n, Logger)
+- `/src/libs` - Third-party library configurations (DB)
 - `/src/models` - Database schemas using Drizzle ORM
 - `/src/validations` - Zod validation schemas
-- `/src/templates` - Template components with tests and stories
+- `/src/templates` - Template components with tests
 - `/src/utils` - Utilities and app configuration (AppConfig.ts)
-- `/tests` - Test suites (e2e with Playwright, integration tests)
+- `/tests` - Test suites (unit tests only)
 - `/migrations` - Database migration files
 
 ### Key Configuration Files
 - `src/utils/AppConfig.ts` - Main app configuration
 - `src/models/Schema.ts` - Database schema definitions
 - `src/libs/DB.ts` - Database connection setup
-- `src/libs/i18n.ts` - Internationalization configuration
-- `src/libs/Arcjet.ts` - Security and bot protection setup
+- `src/libs/Env.ts` - Environment variable validation
 
 ### Environment Variables
 Required for production:
 - `DATABASE_URL` - PostgreSQL connection string
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk authentication
-- `CLERK_SECRET_KEY` - Clerk authentication
-- `ARCJET_KEY` - Arcjet security
-- `LOGTAIL_SOURCE_TOKEN` - Better Stack logging
-- `SENTRY_DSN` - Error monitoring (update in sentry.*.config.ts files)
+- `JWT_SECRET` - Secret key for JWT token signing
+- `NEXT_PUBLIC_APP_URL` - Application URL (optional)
 
 ### Development Workflow
 1. Schema changes: Edit `src/models/Schema.ts`, then run `npm run db:generate`
-2. Component development: Use Storybook (`npm run storybook`)
-3. Testing: Write tests alongside source files, use Vitest for unit tests
-4. Commits: Use `npm run commit` for interactive commit following Conventional Commits
-5. Code style: ESLint auto-fixes on save with proper VSCode setup
-6. Type checking: Run `npm run check-types` before committing
+2. Testing: Write tests alongside source files, use Vitest for unit tests
+3. Commits: Use `npm run commit` for interactive commit following Conventional Commits
+4. Code style: ESLint auto-fixes on save with proper VSCode setup
+5. Type checking: Run `npm run check-types` before committing
 
 ### Important Notes
 - Local development uses PGlite (embedded PostgreSQL), no external database needed
 - Database migrations run automatically during build process
 - Pre-commit hooks via Lefthook ensure code quality
-- All authentication flows are handled by Clerk
-- Arcjet provides bot detection and rate limiting by default
-- Sentry provides error monitoring and tracking
+- Simple JWT-based authentication for user sessions
+- All task management features preserved: urgency levels, labels, status, deadlines
+- Waitlist system maintained for pre-launch email collection

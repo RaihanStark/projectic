@@ -25,7 +25,7 @@ type TaskDetailProps = {
   label: string;
   status: 'todo' | 'in-progress' | 'done' | 'cancelled';
   urgency: 'low' | 'medium' | 'high' | 'critical';
-  deadline: string;
+  deadline: string | null;
 };
 
 const statusConfig = {
@@ -106,7 +106,7 @@ const TaskDetail = (props: TaskDetailProps) => {
         label: task.label || undefined,
         status: task.status,
         urgency: task.urgency,
-        deadline: task.deadline || undefined,
+        deadline: task.deadline ? task.deadline : undefined,
       };
 
       await updateTask(task.id, updateData);
@@ -227,7 +227,7 @@ const TaskDetail = (props: TaskDetailProps) => {
               ? (
                   <input
                     name="deadline"
-                    value={deadline}
+                    value={deadline || ''}
                     onChange={handleInputChange}
                     disabled={loading}
                     className={smallInputStyles}

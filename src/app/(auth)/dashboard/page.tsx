@@ -14,7 +14,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
-import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, fetchSubTaskCounts, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
+import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 import { truncateMarkdown } from '@/utils/markdown';
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
 import TaskListSkeleton from '@/components/TaskListSkeleton';
@@ -111,7 +111,6 @@ export default function Dashboard() {
     loading,
     error,
     setTasks,
-    setSubTaskCounts,
     setLoading,
     setError,
     deleteTask: deleteTaskFromStore,
@@ -154,12 +153,9 @@ export default function Dashboard() {
   const loadTasks = useCallback(async () => {
     try {
       setLoading(true);
-      const [fetchedTasks, subTaskCountsData] = await Promise.all([
-        fetchTasks(),
-        fetchSubTaskCounts()
-      ]);
-      setTasks(fetchedTasks);
-      setSubTaskCounts(subTaskCountsData);
+      const fetchedTasks = await fetchTasks();
+      setTasks(fetchedTasks); // This will automatically calculate subtask counts in the store
+      
       // @ts-expect-error: Accessing updateTaskCount on window for task count updates
       if (window.updateTaskCount) {
         // @ts-expect-error: Accessing updateTaskCount on window for task count updates
@@ -172,7 +168,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [setLoading, setTasks, setSubTaskCounts, setError]);
+  }, [setLoading, setTasks, setError]);
 
   useEffect(() => {
     loadTasks();

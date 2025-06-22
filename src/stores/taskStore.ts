@@ -41,25 +41,77 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   error: null,
   
   // Task actions
-  setTasks: (tasks) => set({ tasks }),
+  setTasks: (tasks) => {
+    // Calculate subtask counts when setting tasks
+    const counts: { [taskId: number]: SubTaskCount } = {};
+    tasks.forEach(task => {
+      if (task.subtasks && task.subtasks.length > 0) {
+        counts[task.id] = {
+          completed: task.subtasks.filter(st => st.completed).length,
+          total: task.subtasks.length
+        };
+      }
+    });
+    set({ tasks, subTaskCounts: counts });
+  },
   
-  addTask: (task) => set((state) => ({
-    tasks: [...state.tasks, task]
-  })),
+  addTask: (task) => set((state) => {
+    const newCounts = { ...state.subTaskCounts };
+    if (task.subtasks && task.subtasks.length > 0) {
+      newCounts[task.id] = {
+        completed: task.subtasks.filter(st => st.completed).length,
+        total: task.subtasks.length
+      };
+    }
+    return { 
+      tasks: [...state.tasks, task],
+      subTaskCounts: newCounts
+    };
+  }),
   
-  updateTask: (taskId, updates) => set((state) => ({
-    tasks: state.tasks.map(task => 
+  updateTask: (taskId, updates) => set((state) => {
+    const updatedTasks = state.tasks.map(task => 
       task.id === taskId ? { ...task, ...updates } : task
-    )
-  })),
+    );
+    
+    // Recalculate subtask counts if the updated task has subtasks
+    const updatedTask = updatedTasks.find(t => t.id === taskId);
+    const newCounts = { ...state.subTaskCounts };
+    
+    if (updatedTask?.subtasks) {
+      if (updatedTask.subtasks.length > 0) {
+        newCounts[taskId] = {
+          completed: updatedTask.subtasks.filter(st => st.completed).length,
+          total: updatedTask.subtasks.length
+        };
+      } else {
+        delete newCounts[taskId];
+      }
+    }
+    
+    return { 
+      tasks: updatedTasks,
+      subTaskCounts: newCounts
+    };
+  }),
   
-  deleteTask: (taskId) => set((state) => ({
-    tasks: state.tasks.filter(task => task.id !== taskId)
-  })),
+  deleteTask: (taskId) => set((state) => {
+    const newCounts = { ...state.subTaskCounts };
+    delete newCounts[taskId];
+    return {
+      tasks: state.tasks.filter(task => task.id !== taskId),
+      subTaskCounts: newCounts
+    };
+  }),
   
-  deleteTasks: (taskIds) => set((state) => ({
-    tasks: state.tasks.filter(task => !taskIds.includes(task.id))
-  })),
+  deleteTasks: (taskIds) => set((state) => {
+    const newCounts = { ...state.subTaskCounts };
+    taskIds.forEach(id => delete newCounts[id]);
+    return {
+      tasks: state.tasks.filter(task => !taskIds.includes(task.id)),
+      subTaskCounts: newCounts
+    };
+  }),
   
   // Sub-task count actions
   setSubTaskCounts: (counts) => set({ subTaskCounts: counts }),

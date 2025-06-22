@@ -90,7 +90,7 @@ const urgencyConfig = {
 
 const TaskDetail = (props: TaskDetailProps) => {
   // Zustand store
-  const { updateSubTaskCount, updateTask: updateTaskInStore } = useTaskStore();
+  const { updateTask: updateTaskInStore } = useTaskStore();
   
   const [isEditing, setIsEditing] = useState(false);
   const [task, setTask] = useState(props);
@@ -145,15 +145,15 @@ const TaskDetail = (props: TaskDetailProps) => {
     const newCompletedState = !subTask.completed;
 
     // Optimistic update - immediately update UI
-    setSubTasks(prev => prev.map(st => 
+    const updatedSubTasks = subTasks.map(st => 
       st.id === id ? { ...st, completed: newCompletedState } : st
-    ));
+    );
+    setSubTasks(updatedSubTasks);
+    
+    // Update task in store with new subtasks
+    updateTaskInStore(task.id, { ...task, subtasks: updatedSubTasks });
+    
     toast.success(`Sub-task ${newCompletedState ? 'completed' : 'marked as incomplete'}`);
-
-    // Update dashboard sub-task counts optimistically
-    const completedCount = subTasks.filter(st => st.completed).length + (newCompletedState ? 1 : -1);
-    const totalCount = subTasks.length;
-    updateSubTaskCount(task.id, completedCount, totalCount);
 
     try {
       await updateSubTask(task.id, id, { 
@@ -165,10 +165,8 @@ const TaskDetail = (props: TaskDetailProps) => {
         st.id === id ? { ...st, completed: !newCompletedState } : st
       ));
       
-      // Rollback dashboard counts
-      const completedCount = subTasks.filter(st => st.completed).length;
-      const totalCount = subTasks.length;
-      updateSubTaskCount(task.id, completedCount, totalCount);
+      // Rollback task in store
+      updateTaskInStore(task.id, { ...task, subtasks: subTasks });
 
       console.error('Error updating sub-task:', err);
       setError('Failed to update sub-task');
@@ -183,13 +181,12 @@ const TaskDetail = (props: TaskDetailProps) => {
       const newSubTask = await createSubTask(task.id, { 
         title: newSubTaskTitle.trim() 
       });
-      setSubTasks(prev => [...prev, newSubTask]);
+      const updatedSubTasks = [...subTasks, newSubTask];
+      setSubTasks(updatedSubTasks);
       setNewSubTaskTitle('');
       
-      // Update dashboard sub-task counts
-      const completedCount = subTasks.filter(st => st.completed).length;
-      const totalCount = subTasks.length + 1; // +1 for the new sub-task
-      updateSubTaskCount(task.id, completedCount, totalCount);
+      // Update task in store with new subtasks
+      updateTaskInStore(task.id, { ...task, subtasks: updatedSubTasks });
       
       toast.success('Sub-task added successfully');
     } catch (err) {
@@ -205,30 +202,27 @@ const TaskDetail = (props: TaskDetailProps) => {
     if (!subTaskToDelete) return;
 
     // Optimistic update - immediately remove from UI
-    setSubTasks(prev => prev.filter(subTask => subTask.id !== id));
+    const updatedSubTasks = subTasks.filter(subTask => subTask.id !== id);
+    setSubTasks(updatedSubTasks);
+    
+    // Update task in store with new subtasks
+    updateTaskInStore(task.id, { ...task, subtasks: updatedSubTasks });
+    
     toast.success('Sub-task deleted successfully');
-
-    // Update dashboard sub-task counts optimistically
-    const completedCount = subTasks.filter(st => st.completed && st.id !== id).length;
-    const totalCount = subTasks.length - 1; // -1 for the deleted sub-task
-    updateSubTaskCount(task.id, completedCount, totalCount);
 
     try {
       await deleteSubTask(task.id, id);
     } catch (err) {
       // Rollback on error - restore the deleted sub-task
-      setSubTasks(prev => {
-        const newSubTasks = [...prev, subTaskToDelete];
-        // Re-sort by creation date to maintain original order
-        return newSubTasks.sort((a, b) => 
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-      });
+      const newSubTasks = [...subTasks.filter(st => st.id !== id), subTaskToDelete];
+      // Re-sort by creation date to maintain original order
+      const sortedSubTasks = newSubTasks.sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      setSubTasks(sortedSubTasks);
       
-      // Rollback dashboard counts
-      const completedCount = subTasks.filter(st => st.completed).length;
-      const totalCount = subTasks.length;
-      updateSubTaskCount(task.id, completedCount, totalCount);
+      // Rollback task in store
+      updateTaskInStore(task.id, { ...task, subtasks: sortedSubTasks });
       
       console.error('Error deleting sub-task:', err);
       setError('Failed to delete sub-task');

@@ -77,7 +77,6 @@ export async function deleteTask(id: number): Promise<void> {
   }
 }
 
-
 export function formatDate(date: Date | string | null): string {
   if (!date) {
     return '';

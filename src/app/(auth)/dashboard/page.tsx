@@ -1,15 +1,13 @@
 'use client';
 
 import type { Task } from '@/utils/taskUtils';
-import { createPortal } from 'react-dom';
-import { useState } from 'react';
+import Link from 'next/link';
 import {
   MoreVertical,
   Trash,
 } from 'lucide-react';
-import Link from 'next/link';
-
-import { useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
 import { deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 
@@ -123,7 +121,9 @@ export default function Dashboard() {
   };
 
   const confirmDeleteTask = async () => {
-    if (!deleteConfirm.taskId) return;
+    if (!deleteConfirm.taskId) {
+      return;
+    }
 
     try {
       await deleteTask(deleteConfirm.taskId);
@@ -143,7 +143,6 @@ export default function Dashboard() {
   const cancelDeleteTask = () => {
     setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
   };
-
 
   if (loading) {
     return (
@@ -280,7 +279,9 @@ export default function Dashboard() {
               Delete Task
             </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete "{deleteConfirm.taskTitle}"? This action cannot be undone.
+              Are you sure you want to delete "
+              {deleteConfirm.taskTitle}
+              "? This action cannot be undone.
             </p>
             <div className="flex gap-3 justify-end">
               <button

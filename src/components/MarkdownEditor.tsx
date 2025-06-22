@@ -56,7 +56,7 @@ const MarkdownEditor = ({
         preview={preview}
         height={height}
         data-color-mode="light"
-        visibleDragBar={false}
+        visibleDragbar={false}
         hideToolbar={isReadOnly}
         textareaProps={{
           placeholder,

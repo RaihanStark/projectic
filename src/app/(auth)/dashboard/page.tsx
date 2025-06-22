@@ -17,6 +17,7 @@ import { cn } from '@/utils/cn';
 import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, fetchSubTaskCounts, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 import { truncateMarkdown } from '@/utils/markdown';
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
+import TaskListSkeleton from '@/components/TaskListSkeleton';
 import toast from 'react-hot-toast';
 
 // Portal-based hover tooltip component
@@ -325,11 +326,7 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-gray-500">Loading tasks...</div>
-      </div>
-    );
+    return <TaskListSkeleton />;
   }
 
   if (error) {

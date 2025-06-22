@@ -250,6 +250,7 @@ const TaskDetail = (props: TaskDetailProps) => {
             {isEditing
               ? (
                   <input
+                    type="date"
                     name="deadline"
                     value={deadline || ''}
                     onChange={handleInputChange}

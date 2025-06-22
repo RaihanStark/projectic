@@ -135,3 +135,80 @@ export function getUrgencyDisplayName(urgency: Task['urgency']): string {
   };
   return urgencyMap[urgency];
 }
+
+// Sub-task types
+export type SubTask = {
+  id: number;
+  title: string;
+  completed: boolean;
+  order: number;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+};
+
+export type CreateSubTaskData = {
+  title: string;
+};
+
+export type UpdateSubTaskData = {
+  title?: string;
+  completed?: boolean;
+};
+
+// Sub-task API functions
+export async function fetchSubTasks(taskId: number): Promise<SubTask[]> {
+  const response = await fetch(`${API_BASE}/${taskId}/subtasks`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch sub-tasks');
+  }
+  const data = await response.json();
+  return data.subTasks;
+}
+
+export async function createSubTask(taskId: number, subTaskData: CreateSubTaskData): Promise<SubTask> {
+  const response = await fetch(`${API_BASE}/${taskId}/subtasks`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(subTaskData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create sub-task');
+  }
+  const data = await response.json();
+  return data.subTask;
+}
+
+export async function updateSubTask(taskId: number, subTaskId: number, subTaskData: UpdateSubTaskData): Promise<SubTask> {
+  const response = await fetch(`${API_BASE}/${taskId}/subtasks/${subTaskId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(subTaskData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update sub-task');
+  }
+  const data = await response.json();
+  return data.subTask;
+}
+
+export async function deleteSubTask(taskId: number, subTaskId: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/${taskId}/subtasks/${subTaskId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete sub-task');
+  }
+}
+
+export async function fetchSubTaskCounts(): Promise<{ [taskId: number]: { completed: number; total: number } }> {
+  const response = await fetch('/dashboard/api/subtasks/counts');
+  if (!response.ok) {
+    throw new Error('Failed to fetch sub-task counts');
+  }
+  const data = await response.json();
+  return data.subTaskCounts;
+}

@@ -14,7 +14,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
-import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
+import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, fetchSubTaskCounts, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
 
 // Portal-based hover tooltip component
@@ -125,11 +125,18 @@ export default function Dashboard() {
     iconClassName: config.iconClassName,
   }));
 
+  // Sub-task counts state
+  const [subTaskCounts, setSubTaskCounts] = useState<{ [taskId: number]: { completed: number; total: number } }>({});
+
   const loadTasks = useCallback(async () => {
     try {
       setLoading(true);
-      const fetchedTasks = await fetchTasks();
+      const [fetchedTasks, subTaskCountsData] = await Promise.all([
+        fetchTasks(),
+        fetchSubTaskCounts()
+      ]);
       setTasks(fetchedTasks);
+      setSubTaskCounts(subTaskCountsData);
       // @ts-expect-error: Accessing updateTaskCount on window for task count updates
       if (window.updateTaskCount) {
         // @ts-expect-error: Accessing updateTaskCount on window for task count updates
@@ -479,6 +486,37 @@ export default function Dashboard() {
                     )}>
                       {task.description || 'No description'}
                     </p>
+                    {/* Sub-task progress indicator */}
+                    {subTaskCounts[task.id] && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <CheckCircle className={cn(
+                          "h-3 w-3",
+                          task.status === 'done' ? "text-gray-400" : "text-green-500"
+                        )} />
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            "w-16 h-1.5 rounded-full",
+                            task.status === 'done' ? "bg-gray-200" : "bg-gray-200"
+                          )}>
+                            <div 
+                              className={cn(
+                                "h-1.5 rounded-full transition-all duration-300",
+                                task.status === 'done' ? "bg-gray-400" : "bg-green-500"
+                              )}
+                              style={{ 
+                                width: `${subTaskCounts[task.id].total > 0 ? (subTaskCounts[task.id].completed / subTaskCounts[task.id].total) * 100 : 0}%` 
+                              }}
+                            ></div>
+                          </div>
+                          <span className={cn(
+                            "text-xs font-medium",
+                            task.status === 'done' ? "text-gray-400" : "text-gray-600"
+                          )}>
+                            {subTaskCounts[task.id].completed}/{subTaskCounts[task.id].total} subtasks
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </Link>
               </div>

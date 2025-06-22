@@ -29,6 +29,7 @@
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.1.1",
     "@t3-oss/env-nextjs": "^0.13.8",
+    "@uiw/react-md-editor": "^4.0.7",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.44.2",
@@ -43,7 +44,8 @@
     "react-hook-form": "^7.58.1",
     "react-hot-toast": "^2.5.2",
     "tailwind-merge": "^3.3.1",
-    "zod": "^3.25.67"
+    "zod": "^3.25.67",
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.15.0",

@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Dropdown, { type DropdownOption } from './Dropdown';
+import MarkdownEditor from './MarkdownEditor';
+import { useTaskStore } from '@/stores/taskStore';
 
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/utils/cn';
@@ -87,6 +89,9 @@ const urgencyConfig = {
 };
 
 const TaskDetail = (props: TaskDetailProps) => {
+  // Zustand store
+  const { updateSubTaskCount, updateTask: updateTaskInStore } = useTaskStore();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [task, setTask] = useState(props);
   const [loading, setLoading] = useState(false);
@@ -137,18 +142,37 @@ const TaskDetail = (props: TaskDetailProps) => {
     const subTask = subTasks.find(st => st.id === id);
     if (!subTask) return;
 
+    const newCompletedState = !subTask.completed;
+
+    // Optimistic update - immediately update UI
+    setSubTasks(prev => prev.map(st => 
+      st.id === id ? { ...st, completed: newCompletedState } : st
+    ));
+    toast.success(`Sub-task ${newCompletedState ? 'completed' : 'marked as incomplete'}`);
+
+    // Update dashboard sub-task counts optimistically
+    const completedCount = subTasks.filter(st => st.completed).length + (newCompletedState ? 1 : -1);
+    const totalCount = subTasks.length;
+    updateSubTaskCount(task.id, completedCount, totalCount);
+
     try {
-      const updatedSubTask = await updateSubTask(task.id, id, { 
-        completed: !subTask.completed 
+      await updateSubTask(task.id, id, { 
+        completed: newCompletedState 
       });
-      setSubTasks(prev => prev.map(st => 
-        st.id === id ? updatedSubTask : st
-      ));
-      toast.success(`Sub-task ${updatedSubTask.completed ? 'completed' : 'marked as incomplete'}`);
     } catch (err) {
+      // Rollback optimistic update on error
+      setSubTasks(prev => prev.map(st => 
+        st.id === id ? { ...st, completed: !newCompletedState } : st
+      ));
+      
+      // Rollback dashboard counts
+      const completedCount = subTasks.filter(st => st.completed).length;
+      const totalCount = subTasks.length;
+      updateSubTaskCount(task.id, completedCount, totalCount);
+
       console.error('Error updating sub-task:', err);
       setError('Failed to update sub-task');
-      toast.error('Failed to update sub-task');
+      toast.error('Failed to update sub-task. Changes reverted.');
     }
   };
 
@@ -161,6 +185,12 @@ const TaskDetail = (props: TaskDetailProps) => {
       });
       setSubTasks(prev => [...prev, newSubTask]);
       setNewSubTaskTitle('');
+      
+      // Update dashboard sub-task counts
+      const completedCount = subTasks.filter(st => st.completed).length;
+      const totalCount = subTasks.length + 1; // +1 for the new sub-task
+      updateSubTaskCount(task.id, completedCount, totalCount);
+      
       toast.success('Sub-task added successfully');
     } catch (err) {
       console.error('Error creating sub-task:', err);
@@ -178,6 +208,11 @@ const TaskDetail = (props: TaskDetailProps) => {
     setSubTasks(prev => prev.filter(subTask => subTask.id !== id));
     toast.success('Sub-task deleted successfully');
 
+    // Update dashboard sub-task counts optimistically
+    const completedCount = subTasks.filter(st => st.completed && st.id !== id).length;
+    const totalCount = subTasks.length - 1; // -1 for the deleted sub-task
+    updateSubTaskCount(task.id, completedCount, totalCount);
+
     try {
       await deleteSubTask(task.id, id);
     } catch (err) {
@@ -189,6 +224,12 @@ const TaskDetail = (props: TaskDetailProps) => {
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
       });
+      
+      // Rollback dashboard counts
+      const completedCount = subTasks.filter(st => st.completed).length;
+      const totalCount = subTasks.length;
+      updateSubTaskCount(task.id, completedCount, totalCount);
+      
       console.error('Error deleting sub-task:', err);
       setError('Failed to delete sub-task');
       toast.error('Failed to delete sub-task. Restored sub-task.');
@@ -235,6 +276,7 @@ const TaskDetail = (props: TaskDetailProps) => {
       };
 
       await updateTask(task.id, updateData);
+      updateTaskInStore(task.id, task);
       setIsEditing(false);
       toast.success('Task updated successfully');
     } catch (err) {
@@ -369,23 +411,24 @@ const TaskDetail = (props: TaskDetailProps) => {
               </div>
               {isEditing
                 ? (
-                    <textarea
-                      name="description"
+                    <MarkdownEditor
                       value={description}
-                      onChange={handleInputChange}
-                      disabled={loading}
+                      onChange={(value) => setTask(prev => ({ ...prev, description: value }))}
                       placeholder="Add a description for this task..."
-                      className={cn(
-                        'w-full border border-gray-300 rounded-lg p-4 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none resize-none transition-all',
-                        loading && 'opacity-50'
-                      )}
-                      rows={6}
+                      disabled={loading}
+                      height={300}
+                      className={cn(loading && 'opacity-50')}
                     />
                   )
                 : (
                     <div className="prose prose-gray max-w-none">
                       {description ? (
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{description}</p>
+                        <MarkdownEditor
+                          value={description}
+                          onChange={() => {}} // Read-only in view mode
+                          preview="preview"
+                          height={200}
+                        />
                       ) : (
                         <p className="text-gray-400 italic">No description provided</p>
                       )}

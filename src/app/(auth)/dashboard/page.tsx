@@ -15,7 +15,10 @@ import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
 import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, fetchSubTaskCounts, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
+import { truncateMarkdown } from '@/utils/markdown';
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
+import TaskListSkeleton from '@/components/TaskListSkeleton';
+import { useTaskStore } from '@/stores/taskStore';
 import toast from 'react-hot-toast';
 
 // Portal-based hover tooltip component
@@ -101,9 +104,21 @@ const statusConfig = {
 };
 
 export default function Dashboard() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Zustand store
+  const {
+    tasks,
+    subTaskCounts,
+    loading,
+    error,
+    setTasks,
+    setSubTaskCounts,
+    setLoading,
+    setError,
+    deleteTask: deleteTaskFromStore,
+    deleteTasks: deleteTasksFromStore,
+    updateTask,
+    getTaskCount
+  } = useTaskStore();
   const [activeTab, setActiveTab] = useState<'all' | 'todo' | 'in-progress' | 'done' | 'cancelled'>('all');
   const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; taskId: number | null; taskTitle: string }>({
@@ -126,8 +141,15 @@ export default function Dashboard() {
     iconClassName: config.iconClassName,
   }));
 
-  // Sub-task counts state
-  const [subTaskCounts, setSubTaskCounts] = useState<{ [taskId: number]: { completed: number; total: number } }>({});
+  // Urgency filter state and options
+  const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
+  const urgencyOptions: DropdownOption[] = [
+    { value: 'all', label: 'All Urgencies', icon: AlertTriangle, iconClassName: 'text-gray-500' },
+    { value: 'low', label: 'Low', icon: AlertTriangle, iconClassName: 'text-green-500' },
+    { value: 'medium', label: 'Medium', icon: AlertTriangle, iconClassName: 'text-yellow-500' },
+    { value: 'high', label: 'High', icon: AlertTriangle, iconClassName: 'text-orange-500' },
+    { value: 'critical', label: 'Critical', icon: AlertTriangle, iconClassName: 'text-red-500' },
+  ];
 
   const loadTasks = useCallback(async () => {
     try {
@@ -150,7 +172,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setLoading, setTasks, setSubTaskCounts, setError]);
 
   useEffect(() => {
     loadTasks();
@@ -160,8 +182,9 @@ export default function Dashboard() {
   useEffect(() => {
     // @ts-expect-error: Adding refreshTasks to window for dashboard refresh
     window.refreshTasks = loadTasks;
+    
     return () => {
-      // @ts-expect-error: Removing refreshTasks from window for dashboard refresh
+      // @ts-expect-error: Removing refreshTasks from window
       delete window.refreshTasks;
     };
   }, [loadTasks]);
@@ -181,12 +204,11 @@ export default function Dashboard() {
 
     try {
       await deleteTask(deleteConfirm.taskId);
-      const updatedTasks = tasks.filter(task => task.id !== deleteConfirm.taskId);
-      setTasks(updatedTasks);
+      deleteTaskFromStore(deleteConfirm.taskId);
       // @ts-expect-error: Accessing updateTaskCount on window for task count updates
       if (window.updateTaskCount) {
         // @ts-expect-error: Accessing updateTaskCount on window for task count updates
-        window.updateTaskCount(updatedTasks.length);
+        window.updateTaskCount(getTaskCount());
       }
       setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
       toast.success(`Task "${deleteConfirm.taskTitle}" deleted successfully`);
@@ -200,11 +222,14 @@ export default function Dashboard() {
     setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
   };
 
-  // Filter and sort tasks based on active tab
+  // Filter and sort tasks based on active tab and urgency filter
   const filteredTasks = tasks
     .filter(task => {
-      if (activeTab === 'all') return true;
-      return task.status === activeTab;
+      // Filter by status tab
+      if (activeTab !== 'all' && task.status !== activeTab) return false;
+      // Filter by urgency
+      if (urgencyFilter !== 'all' && task.urgency !== urgencyFilter) return false;
+      return true;
     })
     .sort((a, b) => {
       // For "All Tasks" tab, move done tasks to bottom
@@ -264,12 +289,11 @@ export default function Dashboard() {
 
     try {
       await bulkDeleteTasks(bulkDeleteConfirm.taskIds);
-      const updatedTasks = tasks.filter(task => !bulkDeleteConfirm.taskIds.includes(task.id));
-      setTasks(updatedTasks);
+      deleteTasksFromStore(bulkDeleteConfirm.taskIds);
       // @ts-expect-error: Accessing updateTaskCount on window for task count updates
       if (window.updateTaskCount) {
         // @ts-expect-error: Accessing updateTaskCount on window for task count updates
-        window.updateTaskCount(updatedTasks.length);
+        window.updateTaskCount(getTaskCount());
       }
       setSelectedTasks(new Set());
       setBulkDeleteConfirm({ isOpen: false, taskIds: [], taskTitles: [] });
@@ -291,13 +315,10 @@ export default function Dashboard() {
     try {
       const updatedTasks = await bulkUpdateTaskStatus(taskIds, newStatus);
       
-      // Update the tasks in state
-      setTasks(prevTasks => 
-        prevTasks.map(task => {
-          const updatedTask = updatedTasks.find(updated => updated.id === task.id);
-          return updatedTask || task;
-        })
-      );
+      // Update the tasks in store
+      updatedTasks.forEach(updatedTask => {
+        updateTask(updatedTask.id, updatedTask);
+      });
       
       // Clear selections after successful update
       setSelectedTasks(new Set());
@@ -311,11 +332,7 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-gray-500">Loading tasks...</div>
-      </div>
-    );
+    return <TaskListSkeleton />;
   }
 
   if (error) {
@@ -396,10 +413,24 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Selection Count */}
-          {selectedTasks.size > 0 && (
+          {/* Right side - Selection Count OR Urgency Filter */}
+          {selectedTasks.size > 0 ? (
             <div className="text-sm text-gray-600">
               {selectedTasks.size} of {filteredTasks.length} selected
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Dropdown
+                value={urgencyFilter}
+                onChange={(value) => {
+                  setUrgencyFilter(value);
+                  setSelectedTasks(new Set()); // Clear selections when filtering
+                }}
+                options={urgencyOptions}
+                size="sm"
+                anchor="auto"
+                className="border-gray-300 hover:bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
           )}
         </div>
@@ -419,6 +450,7 @@ export default function Dashboard() {
                 onClick={() => {
                   setActiveTab(tab.key as typeof activeTab);
                   setSelectedTasks(new Set()); // Clear selections when switching tabs
+                  setUrgencyFilter('all'); // Reset urgency filter when switching tabs
                 }}
                 className={cn(
                   'relative flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2',
@@ -495,7 +527,7 @@ export default function Dashboard() {
                         ? "text-gray-400" 
                         : "text-gray-500"
                     )}>
-                      {task.description || 'No description'}
+                      {task.description ? truncateMarkdown(task.description, 120) : 'No description'}
                     </p>
                     {/* Sub-task progress indicator */}
                     {subTaskCounts[task.id] && (
@@ -515,7 +547,7 @@ export default function Dashboard() {
                                 task.status === 'done' ? "bg-gray-400" : "bg-green-500"
                               )}
                               style={{ 
-                                width: `${subTaskCounts[task.id].total > 0 ? (subTaskCounts[task.id].completed / subTaskCounts[task.id].total) * 100 : 0}%` 
+                                width: `${subTaskCounts[task.id]?.total > 0 ? (subTaskCounts[task.id].completed / subTaskCounts[task.id].total) * 100 : 0}%` 
                               }}
                             ></div>
                           </div>
@@ -523,7 +555,7 @@ export default function Dashboard() {
                             "text-xs font-medium",
                             task.status === 'done' ? "text-gray-400" : "text-gray-600"
                           )}>
-                            {subTaskCounts[task.id].completed}/{subTaskCounts[task.id].total} subtasks
+                            {subTaskCounts[task.id]?.completed}/{subTaskCounts[task.id]?.total} subtasks
                           </span>
                         </div>
                       </div>

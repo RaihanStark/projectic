@@ -162,8 +162,8 @@ const TaskDetail = (props: TaskDetailProps) => {
     = 'rounded-md border-gray-300 bg-gray-50 p-1 text-sm text-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-4xl px-6 py-8">
+    <div className="flex-1 overflow-hidden">
+      <div className="h-full px-6 py-6">
         {error && (
           <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
             <div className="flex items-center gap-2">

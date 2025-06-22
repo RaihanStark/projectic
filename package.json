@@ -21,7 +21,7 @@
     "db-server:memory": "pglite-server",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "dotenv -c production -- drizzle-kit migrate",
-    "db:studio": "dotenv -c production -- drizzle-kit studio",
+    "db:studio": "dotenv -c production -- drizzle-kit studio"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.3",

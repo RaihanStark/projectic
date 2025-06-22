@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { CheckCircle, Calendar, Users, Zap } from 'lucide-react';
 import { WaitlistForm } from '@/components/WaitlistForm';
 

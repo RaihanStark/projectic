@@ -44,6 +44,13 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
     notFound();
   }
 
+  let formattedDeadline: string | null = null;
+  if (task.deadline) {
+    formattedDeadline = typeof task.deadline === 'string' 
+      ? task.deadline.split('T')[0] || null
+      : new Date(task.deadline).toISOString().split('T')[0] || null;
+  }
+
   return (
     <TaskDetail
       id={task.id}
@@ -52,7 +59,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
       label={task.label || ''}
       status={task.status}
       urgency={task.urgency}
-      deadline={task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : ''}
+      deadline={formattedDeadline}
     />
   );
 }

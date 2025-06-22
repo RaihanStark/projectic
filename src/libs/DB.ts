@@ -53,10 +53,10 @@ try {
   });
 } catch (error) {
   // Migration might fail if tables already exist, which is ok for development
-  if (Env.NODE_ENV === 'development' && error.message.includes('already exists')) {
+  if (Env.NODE_ENV === 'development' && error instanceof Error && error.message.includes('already exists')) {
     console.log('Tables already exist, skipping migration');
   } else {
-    console.error('Migration error:', error.message);
+    console.error('Migration error:', error instanceof Error ? error.message : 'Unknown error');
     // Don't throw in development to allow the app to continue running
     if (Env.NODE_ENV !== 'development') {
       throw error;

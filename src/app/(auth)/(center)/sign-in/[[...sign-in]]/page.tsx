@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { X } from 'lucide-react';
 
 export default function SignInPage() {
   const router = useRouter();

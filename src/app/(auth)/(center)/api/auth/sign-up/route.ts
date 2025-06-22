@@ -37,6 +37,13 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
+    if (!newUser) {
+      return NextResponse.json(
+        { error: 'Failed to create user' },
+        { status: 500 }
+      );
+    }
+
     // Create token
     const token = await createToken({
       id: newUser.id,

@@ -1,3 +1,13 @@
+// Sub-task types
+export type SubTask = {
+  id: number;
+  title: string;
+  completed: boolean;
+  order: number;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+};
+
 export type Task = {
   id: number;
   userId: number;
@@ -9,6 +19,7 @@ export type Task = {
   deadline: Date | string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
+  subtasks?: SubTask[];
 };
 
 export type CreateTaskData = {
@@ -136,16 +147,6 @@ export function getUrgencyDisplayName(urgency: Task['urgency']): string {
   return urgencyMap[urgency];
 }
 
-// Sub-task types
-export type SubTask = {
-  id: number;
-  title: string;
-  completed: boolean;
-  order: number;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-};
-
 export type CreateSubTaskData = {
   title: string;
 };
@@ -204,11 +205,3 @@ export async function deleteSubTask(taskId: number, subTaskId: number): Promise<
   }
 }
 
-export async function fetchSubTaskCounts(): Promise<{ [taskId: number]: { completed: number; total: number } }> {
-  const response = await fetch('/dashboard/api/subtasks/counts');
-  if (!response.ok) {
-    throw new Error('Failed to fetch sub-task counts');
-  }
-  const data = await response.json();
-  return data.subTaskCounts;
-}

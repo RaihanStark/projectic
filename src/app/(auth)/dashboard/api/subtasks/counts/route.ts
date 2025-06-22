@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { and, eq, count, sum, sql } from 'drizzle-orm';
+import { and, eq, count, sum, sql, inArray } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import { subTasksSchema, tasksSchema } from '@/models/Schema';
 import { createErrorResponse, createSuccessResponse, getCurrentUserId } from '@/utils/auth';
@@ -9,7 +9,19 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
 
-    // Get sub-task counts grouped by task ID
+    // First get all user's task IDs to limit the subtask query scope
+    const userTasks = await db
+      .select({ id: tasksSchema.id })
+      .from(tasksSchema)
+      .where(eq(tasksSchema.userId, userId));
+
+    if (userTasks.length === 0) {
+      return createSuccessResponse({ subTaskCounts: {} });
+    }
+
+    const taskIds = userTasks.map(task => task.id);
+
+    // Get sub-task counts with optimized query - no JOIN needed
     const subTaskCounts = await db
       .select({
         taskId: subTasksSchema.taskId,
@@ -17,8 +29,7 @@ export async function GET(request: NextRequest) {
         completed: sum(sql`CASE WHEN ${subTasksSchema.completed} = true THEN 1 ELSE 0 END`),
       })
       .from(subTasksSchema)
-      .innerJoin(tasksSchema, eq(subTasksSchema.taskId, tasksSchema.id))
-      .where(eq(tasksSchema.userId, userId))
+      .where(inArray(subTasksSchema.taskId, taskIds))
       .groupBy(subTasksSchema.taskId);
 
     // Convert to object for easy lookup

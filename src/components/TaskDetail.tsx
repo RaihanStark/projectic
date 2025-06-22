@@ -20,6 +20,7 @@ import Dropdown, { type DropdownOption } from './Dropdown';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/utils/cn';
 import { updateTask, fetchSubTasks, createSubTask, updateSubTask, deleteSubTask } from '@/utils/taskUtils';
+import toast from 'react-hot-toast';
 
 type TaskDetailProps = {
   id: number;
@@ -120,6 +121,7 @@ const TaskDetail = (props: TaskDetailProps) => {
     } catch (err) {
       console.error('Error loading sub-tasks:', err);
       setError('Failed to load sub-tasks');
+      toast.error('Failed to load sub-tasks');
     } finally {
       setSubTasksLoading(false);
     }
@@ -142,9 +144,11 @@ const TaskDetail = (props: TaskDetailProps) => {
       setSubTasks(prev => prev.map(st => 
         st.id === id ? updatedSubTask : st
       ));
+      toast.success(`Sub-task ${updatedSubTask.completed ? 'completed' : 'marked as incomplete'}`);
     } catch (err) {
       console.error('Error updating sub-task:', err);
       setError('Failed to update sub-task');
+      toast.error('Failed to update sub-task');
     }
   };
 
@@ -157,9 +161,11 @@ const TaskDetail = (props: TaskDetailProps) => {
       });
       setSubTasks(prev => [...prev, newSubTask]);
       setNewSubTaskTitle('');
+      toast.success('Sub-task added successfully');
     } catch (err) {
       console.error('Error creating sub-task:', err);
       setError('Failed to create sub-task');
+      toast.error('Failed to create sub-task');
     }
   };
 
@@ -167,9 +173,11 @@ const TaskDetail = (props: TaskDetailProps) => {
     try {
       await deleteSubTask(task.id, id);
       setSubTasks(prev => prev.filter(subTask => subTask.id !== id));
+      toast.success('Sub-task deleted successfully');
     } catch (err) {
       console.error('Error deleting sub-task:', err);
       setError('Failed to delete sub-task');
+      toast.error('Failed to delete sub-task');
     }
   };
 
@@ -195,6 +203,13 @@ const TaskDetail = (props: TaskDetailProps) => {
     setLoading(true);
     setError(null);
 
+    // Form validation
+    if (!task.title.trim()) {
+      toast.error('Task title is required');
+      setLoading(false);
+      return;
+    }
+
     try {
       const updateData: UpdateTaskData = {
         title: task.title,
@@ -207,8 +222,10 @@ const TaskDetail = (props: TaskDetailProps) => {
 
       await updateTask(task.id, updateData);
       setIsEditing(false);
+      toast.success('Task updated successfully');
     } catch (err) {
       setError('Failed to update task. Please try again.');
+      toast.error('Failed to update task');
       console.error('Error updating task:', err);
     } finally {
       setLoading(false);

@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
 import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, fetchSubTaskCounts, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
+import toast from 'react-hot-toast';
 
 // Portal-based hover tooltip component
 const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
@@ -144,6 +145,7 @@ export default function Dashboard() {
       }
     } catch (err) {
       setError('Failed to load tasks');
+      toast.error('Failed to load tasks');
       console.error('Error loading tasks:', err);
     } finally {
       setLoading(false);
@@ -187,8 +189,10 @@ export default function Dashboard() {
         window.updateTaskCount(updatedTasks.length);
       }
       setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
+      toast.success(`Task "${deleteConfirm.taskTitle}" deleted successfully`);
     } catch (err) {
       console.error('Error deleting task:', err);
+      toast.error('Failed to delete task');
     }
   };
 
@@ -269,8 +273,10 @@ export default function Dashboard() {
       }
       setSelectedTasks(new Set());
       setBulkDeleteConfirm({ isOpen: false, taskIds: [], taskTitles: [] });
+      toast.success(`${bulkDeleteConfirm.taskIds.length} task${bulkDeleteConfirm.taskIds.length > 1 ? 's' : ''} deleted successfully`);
     } catch (err) {
       console.error('Error bulk deleting tasks:', err);
+      toast.error('Failed to delete tasks');
     }
   };
 
@@ -295,9 +301,10 @@ export default function Dashboard() {
       
       // Clear selections after successful update
       setSelectedTasks(new Set());
+      toast.success(`${taskIds.length} task${taskIds.length > 1 ? 's' : ''} updated to ${getStatusDisplayName(newStatus as Task['status'])}`);
     } catch (err) {
       console.error('Error bulk updating task status:', err);
-      // TODO: Show error toast/notification
+      toast.error('Failed to update task status');
     } finally {
       setBulkUpdateLoading(false);
     }
@@ -330,9 +337,13 @@ export default function Dashboard() {
               const response = await fetch('/dashboard/api/seed', { method: 'POST' });
               if (response.ok) {
                 loadTasks();
+                toast.success('Sample tasks loaded successfully');
+              } else {
+                toast.error('Failed to load sample data');
               }
             } catch (err) {
               console.error('Error seeding data:', err);
+              toast.error('Failed to load sample data');
             }
           }}
           className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600"

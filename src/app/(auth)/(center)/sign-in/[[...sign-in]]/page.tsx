@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -17,6 +18,18 @@ export default function SignInPage() {
     setError(null);
     setLoading(true);
 
+    // Form validation
+    if (!email.trim()) {
+      toast.error('Email is required');
+      setLoading(false);
+      return;
+    }
+    if (!password.trim()) {
+      toast.error('Password is required');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/sign-in', {
         method: 'POST',
@@ -28,13 +41,16 @@ export default function SignInPage() {
 
       if (!response.ok) {
         setError(data.error || 'Failed to sign in');
+        toast.error(data.error || 'Failed to sign in');
         return;
       }
 
+      toast.success('Sign in successful! Redirecting...');
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (err) {
       setError('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -74,6 +74,7 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'todo' | 'in-progress' | 'done' | 'cancelled'>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; taskId: number | null; taskTitle: string }>({
     isOpen: false,
     taskId: null,
@@ -144,6 +145,21 @@ export default function Dashboard() {
     setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
   };
 
+  // Filter tasks based on active tab
+  const filteredTasks = tasks.filter(task => {
+    if (activeTab === 'all') return true;
+    return task.status === activeTab;
+  });
+
+  // Get counts for each tab
+  const tabCounts = {
+    all: tasks.length,
+    todo: tasks.filter(t => t.status === 'todo').length,
+    'in-progress': tasks.filter(t => t.status === 'in-progress').length,
+    done: tasks.filter(t => t.status === 'done').length,
+    cancelled: tasks.filter(t => t.status === 'cancelled').length,
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -186,8 +202,56 @@ export default function Dashboard() {
 
   return (
     <div className="w-full overflow-hidden">
-      <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-sm">
-        {tasks.map(task => (
+      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+        {/* Gmail-style Integrated Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex" aria-label="Tabs">
+            {[
+              { key: 'all', label: 'All Tasks', count: tabCounts.all },
+              { key: 'todo', label: 'Todo', count: tabCounts.todo },
+              { key: 'in-progress', label: 'In Progress', count: tabCounts['in-progress'] },
+              { key: 'done', label: 'Done', count: tabCounts.done },
+              { key: 'cancelled', label: 'Cancelled', count: tabCounts.cancelled },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                className={cn(
+                  'relative flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2',
+                  activeTab === tab.key
+                    ? 'border-blue-500 text-blue-600 bg-blue-50/50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                )}
+              >
+                <span>{tab.label}</span>
+                {tab.count > 0 && (
+                  <span className={cn(
+                    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                    activeTab === tab.key
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-600'
+                  )}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Tasks List */}
+        <ul className="divide-y divide-gray-200">
+        {filteredTasks.length === 0 ? (
+          <li className="p-8 text-center text-gray-500">
+            <div className="text-sm">
+              {activeTab === 'all' 
+                ? 'No tasks found'
+                : `No ${activeTab.replace('-', ' ')} tasks`
+              }
+            </div>
+          </li>
+        ) : (
+          filteredTasks.map(task => (
           <li
             key={task.id}
             className="group p-4 transition-colors hover:bg-gray-50"
@@ -268,8 +332,10 @@ export default function Dashboard() {
               </div>
             </div>
           </li>
-        ))}
-      </ul>
+          ))
+        )}
+        </ul>
+      </div>
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.isOpen && (

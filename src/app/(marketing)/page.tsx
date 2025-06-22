@@ -1,11 +1,6 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server';
 import Link from 'next/link';
 import { CheckCircle, Calendar, Users, Zap } from 'lucide-react';
 import { WaitlistForm } from '@/components/WaitlistForm';
-
-type IIndexProps = {
-  params: Promise<{ locale: string }>;
-};
 
 export async function generateMetadata() {
   return {
@@ -14,9 +9,7 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Index(props: IIndexProps) {
-  const { locale } = await props.params;
-  setRequestLocale(locale);
+export default function Index() {
 
   return (
     <>

@@ -13,6 +13,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import Dropdown, { type DropdownOption } from './Dropdown';
 
 import { useState } from 'react';
 import { cn } from '@/utils/cn';
@@ -94,6 +95,29 @@ const TaskDetail = (props: TaskDetailProps) => {
     const { name, value } = e.target;
     setTask(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleStatusChange = (newStatus: 'todo' | 'in-progress' | 'done' | 'cancelled') => {
+    setTask(prev => ({ ...prev, status: newStatus }));
+  };
+
+  const handleUrgencyChange = (newUrgency: 'low' | 'medium' | 'high' | 'critical') => {
+    setTask(prev => ({ ...prev, urgency: newUrgency }));
+  };
+
+  // Convert config objects to dropdown options
+  const statusOptions: DropdownOption[] = Object.entries(statusConfig).map(([key, config]) => ({
+    value: key,
+    label: config.label,
+    icon: config.icon,
+    iconClassName: config.iconClassName,
+  }));
+
+  const urgencyOptions: DropdownOption[] = Object.entries(urgencyConfig).map(([key, config]) => ({
+    value: key,
+    label: config.label,
+    icon: config.icon,
+    iconClassName: config.iconClassName,
+  }));
 
   const handleSave = async () => {
     setLoading(true);
@@ -269,32 +293,20 @@ const TaskDetail = (props: TaskDetailProps) => {
         {isEditing
           ? (
               <>
-                <select
-                  name="status"
+                <Dropdown
                   value={status}
-                  onChange={handleInputChange}
+                  onChange={(value) => handleStatusChange(value as 'todo' | 'in-progress' | 'done' | 'cancelled')}
+                  options={statusOptions}
                   disabled={loading}
-                  className={cn(smallInputStyles, 'appearance-none')}
-                >
-                  {Object.entries(statusConfig).map(([key, config]) => (
-                    <option key={key} value={key}>
-                      {config.label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  name="urgency"
+                  size="sm"
+                />
+                <Dropdown
                   value={urgency}
-                  onChange={handleInputChange}
+                  onChange={(value) => handleUrgencyChange(value as 'low' | 'medium' | 'high' | 'critical')}
+                  options={urgencyOptions}
                   disabled={loading}
-                  className={cn(smallInputStyles, 'appearance-none')}
-                >
-                  {Object.entries(urgencyConfig).map(([key, config]) => (
-                    <option key={key} value={key}>
-                      {config.label}
-                    </option>
-                  ))}
-                </select>
+                  size="sm"
+                />
               </>
             )
           : (

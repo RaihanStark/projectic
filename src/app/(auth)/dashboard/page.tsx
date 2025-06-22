@@ -3,14 +3,19 @@
 import type { Task } from '@/utils/taskUtils';
 import Link from 'next/link';
 import {
-  ChevronDown,
+  AlertTriangle,
+  CheckCircle,
+  Circle,
+  Clock,
   MoreVertical,
   Trash,
+  XCircle,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
 import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
+import Dropdown, { type DropdownOption } from '@/components/Dropdown';
 
 // Portal-based hover tooltip component
 const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
@@ -71,6 +76,29 @@ const statusClasses: { [key: string]: string } = {
   'cancelled': 'bg-red-100 text-red-800',
 };
 
+const statusConfig = {
+  'todo': {
+    label: 'Todo',
+    icon: Circle,
+    iconClassName: 'text-gray-500',
+  },
+  'in-progress': {
+    label: 'In Progress',
+    icon: Clock,
+    iconClassName: 'text-blue-500',
+  },
+  'done': {
+    label: 'Done',
+    icon: CheckCircle,
+    iconClassName: 'text-green-500',
+  },
+  'cancelled': {
+    label: 'Cancelled',
+    icon: XCircle,
+    iconClassName: 'text-red-500',
+  },
+};
+
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +116,14 @@ export default function Dashboard() {
     taskTitles: [],
   });
   const [bulkUpdateLoading, setBulkUpdateLoading] = useState(false);
+
+  // Status dropdown options for bulk update
+  const statusOptions: DropdownOption[] = Object.entries(statusConfig).map(([key, config]) => ({
+    value: key,
+    label: config.label,
+    icon: config.icon,
+    iconClassName: config.iconClassName,
+  }));
 
   const loadTasks = useCallback(async () => {
     try {
@@ -315,35 +351,19 @@ export default function Dashboard() {
             {selectedTasks.size > 0 && (
               <>
                 {/* Status Update Dropdown */}
-                <div className="relative">
-                  <select
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        handleBulkStatusUpdate(e.target.value);
-                        e.target.value = ''; // Reset selection
-                      }
-                    }}
-                    disabled={bulkUpdateLoading}
-                    className={cn(
-                      "appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
-                      bulkUpdateLoading && "opacity-50 cursor-not-allowed"
-                    )}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>
-                      {bulkUpdateLoading ? 'Updating...' : 'Change status'}
-                    </option>
-                    {!bulkUpdateLoading && (
-                      <>
-                        <option value="todo">Todo</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="done">Done</option>
-                        <option value="cancelled">Cancelled</option>
-                      </>
-                    )}
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                </div>
+                <Dropdown
+                  value=""
+                  onChange={(value) => {
+                    if (value) {
+                      handleBulkStatusUpdate(value);
+                    }
+                  }}
+                  options={statusOptions}
+                  disabled={bulkUpdateLoading}
+                  placeholder={bulkUpdateLoading ? 'Updating...' : 'Change status'}
+                  size="sm"
+                  className="border-gray-300 hover:bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                />
 
                 {/* Delete Button */}
                 <button

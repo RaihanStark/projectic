@@ -138,18 +138,45 @@ const TaskDetail = (props: TaskDetailProps) => {
     const subTask = subTasks.find(st => st.id === id);
     if (!subTask) return;
 
+    const newCompletedState = !subTask.completed;
+
+    // Optimistic update - immediately update UI
+    setSubTasks(prev => prev.map(st => 
+      st.id === id ? { ...st, completed: newCompletedState } : st
+    ));
+    toast.success(`Sub-task ${newCompletedState ? 'completed' : 'marked as incomplete'}`);
+
+    // Update dashboard sub-task counts optimistically
+    // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+    if (window.updateSubTaskCounts) {
+      const completedCount = subTasks.filter(st => st.completed).length + (newCompletedState ? 1 : -1);
+      const totalCount = subTasks.length;
+      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+      window.updateSubTaskCounts(task.id, completedCount, totalCount);
+    }
+
     try {
-      const updatedSubTask = await updateSubTask(task.id, id, { 
-        completed: !subTask.completed 
+      await updateSubTask(task.id, id, { 
+        completed: newCompletedState 
       });
-      setSubTasks(prev => prev.map(st => 
-        st.id === id ? updatedSubTask : st
-      ));
-      toast.success(`Sub-task ${updatedSubTask.completed ? 'completed' : 'marked as incomplete'}`);
     } catch (err) {
+      // Rollback optimistic update on error
+      setSubTasks(prev => prev.map(st => 
+        st.id === id ? { ...st, completed: !newCompletedState } : st
+      ));
+      
+      // Rollback dashboard counts
+      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+      if (window.updateSubTaskCounts) {
+        const completedCount = subTasks.filter(st => st.completed).length;
+        const totalCount = subTasks.length;
+        // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+        window.updateSubTaskCounts(task.id, completedCount, totalCount);
+      }
+
       console.error('Error updating sub-task:', err);
       setError('Failed to update sub-task');
-      toast.error('Failed to update sub-task');
+      toast.error('Failed to update sub-task. Changes reverted.');
     }
   };
 
@@ -162,6 +189,16 @@ const TaskDetail = (props: TaskDetailProps) => {
       });
       setSubTasks(prev => [...prev, newSubTask]);
       setNewSubTaskTitle('');
+      
+      // Update dashboard sub-task counts
+      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+      if (window.updateSubTaskCounts) {
+        const completedCount = subTasks.filter(st => st.completed).length;
+        const totalCount = subTasks.length + 1; // +1 for the new sub-task
+        // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+        window.updateSubTaskCounts(task.id, completedCount, totalCount);
+      }
+      
       toast.success('Sub-task added successfully');
     } catch (err) {
       console.error('Error creating sub-task:', err);
@@ -179,6 +216,15 @@ const TaskDetail = (props: TaskDetailProps) => {
     setSubTasks(prev => prev.filter(subTask => subTask.id !== id));
     toast.success('Sub-task deleted successfully');
 
+    // Update dashboard sub-task counts optimistically
+    // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+    if (window.updateSubTaskCounts) {
+      const completedCount = subTasks.filter(st => st.completed && st.id !== id).length;
+      const totalCount = subTasks.length - 1; // -1 for the deleted sub-task
+      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+      window.updateSubTaskCounts(task.id, completedCount, totalCount);
+    }
+
     try {
       await deleteSubTask(task.id, id);
     } catch (err) {
@@ -190,6 +236,16 @@ const TaskDetail = (props: TaskDetailProps) => {
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
       });
+      
+      // Rollback dashboard counts
+      // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+      if (window.updateSubTaskCounts) {
+        const completedCount = subTasks.filter(st => st.completed).length;
+        const totalCount = subTasks.length;
+        // @ts-expect-error: Accessing updateSubTaskCounts on window for dashboard updates
+        window.updateSubTaskCounts(task.id, completedCount, totalCount);
+      }
+      
       console.error('Error deleting sub-task:', err);
       setError('Failed to delete sub-task');
       toast.error('Failed to delete sub-task. Restored sub-task.');

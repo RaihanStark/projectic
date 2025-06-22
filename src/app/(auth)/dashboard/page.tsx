@@ -168,13 +168,32 @@ export default function Dashboard() {
     loadTasks();
   }, [loadTasks]);
 
-  // Expose refresh function to parent components
+  // Expose refresh function and sub-task count updates to parent components
   useEffect(() => {
     // @ts-expect-error: Adding refreshTasks to window for dashboard refresh
     window.refreshTasks = loadTasks;
+    
+    // Function to update individual sub-task counts without full reload
+    // @ts-expect-error: Adding updateSubTaskCounts to window for sub-task updates
+    window.updateSubTaskCounts = (taskId: number, completed: number, total: number) => {
+      setSubTaskCounts(prev => {
+        if (total === 0) {
+          // Remove the task from sub-task counts when no sub-tasks exist
+          const { [taskId]: removed, ...rest } = prev;
+          return rest;
+        }
+        return {
+          ...prev,
+          [taskId]: { completed, total }
+        };
+      });
+    };
+    
     return () => {
-      // @ts-expect-error: Removing refreshTasks from window for dashboard refresh
+      // @ts-expect-error: Removing functions from window
       delete window.refreshTasks;
+      // @ts-expect-error: Removing functions from window
+      delete window.updateSubTaskCounts;
     };
   }, [loadTasks]);
 

@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 import type { CreateTaskData } from '@/utils/taskUtils';
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import MarkdownEditor from './MarkdownEditor';
 import { createTask } from '@/utils/taskUtils';
 import toast from 'react-hot-toast';
 
@@ -127,15 +128,12 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit }: NewTaskModalProps) => {
             <label htmlFor="description" className={labelStyles}>
               Description
             </label>
-            <textarea
-              id="description"
-              name="description"
+            <MarkdownEditor
               value={task.description}
-              onChange={handleInputChange}
-              className={inputStyles}
+              onChange={(value) => setTask(prev => ({ ...prev, description: value }))}
               placeholder="Add a more detailed description..."
-              rows={4}
               disabled={loading}
+              height={200}
             />
           </div>
 

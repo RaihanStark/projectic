@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Dropdown, { type DropdownOption } from './Dropdown';
+import MarkdownEditor from './MarkdownEditor';
 
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/utils/cn';
@@ -369,23 +370,24 @@ const TaskDetail = (props: TaskDetailProps) => {
               </div>
               {isEditing
                 ? (
-                    <textarea
-                      name="description"
+                    <MarkdownEditor
                       value={description}
-                      onChange={handleInputChange}
-                      disabled={loading}
+                      onChange={(value) => setTask(prev => ({ ...prev, description: value }))}
                       placeholder="Add a description for this task..."
-                      className={cn(
-                        'w-full border border-gray-300 rounded-lg p-4 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none resize-none transition-all',
-                        loading && 'opacity-50'
-                      )}
-                      rows={6}
+                      disabled={loading}
+                      height={300}
+                      className={cn(loading && 'opacity-50')}
                     />
                   )
                 : (
                     <div className="prose prose-gray max-w-none">
                       {description ? (
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{description}</p>
+                        <MarkdownEditor
+                          value={description}
+                          onChange={() => {}} // Read-only in view mode
+                          preview="preview"
+                          height={200}
+                        />
                       ) : (
                         <p className="text-gray-400 italic">No description provided</p>
                       )}

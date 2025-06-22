@@ -3,13 +3,14 @@
 import type { Task } from '@/utils/taskUtils';
 import Link from 'next/link';
 import {
+  ChevronDown,
   MoreVertical,
   Trash,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
-import { bulkDeleteTasks, deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
+import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 
 // Portal-based hover tooltip component
 const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
@@ -86,6 +87,7 @@ export default function Dashboard() {
     taskIds: [],
     taskTitles: [],
   });
+  const [bulkUpdateLoading, setBulkUpdateLoading] = useState(false);
 
   const loadTasks = useCallback(async () => {
     try {
@@ -223,6 +225,31 @@ export default function Dashboard() {
     setBulkDeleteConfirm({ isOpen: false, taskIds: [], taskTitles: [] });
   };
 
+  const handleBulkStatusUpdate = async (newStatus: string) => {
+    const taskIds = Array.from(selectedTasks);
+    
+    setBulkUpdateLoading(true);
+    try {
+      const updatedTasks = await bulkUpdateTaskStatus(taskIds, newStatus);
+      
+      // Update the tasks in state
+      setTasks(prevTasks => 
+        prevTasks.map(task => {
+          const updatedTask = updatedTasks.find(updated => updated.id === task.id);
+          return updatedTask || task;
+        })
+      );
+      
+      // Clear selections after successful update
+      setSelectedTasks(new Set());
+    } catch (err) {
+      console.error('Error bulk updating task status:', err);
+      // TODO: Show error toast/notification
+    } finally {
+      setBulkUpdateLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -267,7 +294,7 @@ export default function Dashboard() {
     <div className="w-full overflow-hidden">
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
         {/* Gmail-style Select Bar */}
-        <div className="flex items-center px-4 py-3 border-b border-gray-200 min-h-[50px]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 min-h-[60px]">
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
@@ -276,16 +303,57 @@ export default function Dashboard() {
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             {selectedTasks.size > 0 && (
-              <button
-                type="button"
-                onClick={handleBulkDelete}
-                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                title="Delete selected"
-              >
-                <Trash className="h-4 w-4" />
-              </button>
+              <>
+                {/* Status Update Dropdown */}
+                <div className="relative">
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        handleBulkStatusUpdate(e.target.value);
+                        e.target.value = ''; // Reset selection
+                      }
+                    }}
+                    disabled={bulkUpdateLoading}
+                    className={cn(
+                      "appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                      bulkUpdateLoading && "opacity-50 cursor-not-allowed"
+                    )}
+                    defaultValue=""
+                  >
+                    <option value="" disabled>
+                      {bulkUpdateLoading ? 'Updating...' : 'Change status'}
+                    </option>
+                    {!bulkUpdateLoading && (
+                      <>
+                        <option value="todo">Todo</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="done">Done</option>
+                        <option value="cancelled">Cancelled</option>
+                      </>
+                    )}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
+
+                {/* Delete Button */}
+                <button
+                  type="button"
+                  onClick={handleBulkDelete}
+                  className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                  title="Delete selected"
+                >
+                  <Trash className="h-4 w-4" />
+                </button>
+              </>
             )}
           </div>
+
+          {/* Selection Count */}
+          {selectedTasks.size > 0 && (
+            <div className="text-sm text-gray-600">
+              {selectedTasks.size} of {filteredTasks.length} selected
+            </div>
+          )}
         </div>
 
         {/* Gmail-style Integrated Tabs */}

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const userId = await getCurrentUserId();
     const body = await request.json();
 
-    const { title, description, label, status, urgency, deadline, isStarred } = body;
+    const { title, description, label, status, urgency, deadline } = body;
 
     if (!title) {
       return createErrorResponse('Title is required');
@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
         status: status || 'todo',
         urgency: urgency || 'medium',
         deadline: deadline ? new Date(deadline) : null,
-        isStarred: isStarred || false,
       })
       .returning();
 

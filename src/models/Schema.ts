@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, serial, text, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 
 // This file defines the structure of your database tables using the Drizzle ORM.
 
@@ -41,7 +41,6 @@ export const tasksSchema = pgTable('tasks', {
   status: varchar('status', { length: 20 }).notNull().default('todo'), // todo, in-progress, done, cancelled
   urgency: varchar('urgency', { length: 20 }).notNull().default('medium'), // low, medium, high, critical
   deadline: timestamp('deadline', { mode: 'date' }),
-  isStarred: boolean('is_starred').default(false),
   updatedAt: timestamp('updated_at', { mode: 'date' })
     .defaultNow()
     .$onUpdate(() => new Date())

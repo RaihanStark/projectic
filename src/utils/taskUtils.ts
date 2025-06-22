@@ -7,7 +7,6 @@ export type Task = {
   status: 'todo' | 'in-progress' | 'done' | 'cancelled';
   urgency: 'low' | 'medium' | 'high' | 'critical';
   deadline: Date | string | null;
-  isStarred: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
 };
@@ -19,7 +18,6 @@ export type CreateTaskData = {
   status?: 'todo' | 'in-progress' | 'done' | 'cancelled';
   urgency?: 'low' | 'medium' | 'high' | 'critical';
   deadline?: string;
-  isStarred?: boolean;
 };
 
 export type UpdateTaskData = {} & Partial<CreateTaskData>;
@@ -77,10 +75,6 @@ export async function deleteTask(id: number): Promise<void> {
   if (!response.ok) {
     throw new Error('Failed to delete task');
   }
-}
-
-export async function toggleTaskStar(id: number, isStarred: boolean): Promise<Task> {
-  return updateTask(id, { isStarred });
 }
 
 export function formatDate(date: Date | string | null): string {

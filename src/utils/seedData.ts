@@ -11,7 +11,6 @@ export async function seedSampleTasks(userId: number) {
       status: 'in-progress' as const,
       urgency: 'high' as const,
       deadline: new Date('2024-03-15'),
-      isStarred: true,
     },
     {
       userId,
@@ -21,7 +20,6 @@ export async function seedSampleTasks(userId: number) {
       status: 'todo' as const,
       urgency: 'critical' as const,
       deadline: new Date('2024-03-20'),
-      isStarred: false,
     },
     {
       userId,
@@ -31,7 +29,6 @@ export async function seedSampleTasks(userId: number) {
       status: 'done' as const,
       urgency: 'medium' as const,
       deadline: new Date('2024-03-10'),
-      isStarred: false,
     },
     {
       userId,
@@ -41,7 +38,6 @@ export async function seedSampleTasks(userId: number) {
       status: 'todo' as const,
       urgency: 'low' as const,
       deadline: new Date('2024-03-25'),
-      isStarred: false,
     },
   ];
 

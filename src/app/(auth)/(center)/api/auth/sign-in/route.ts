@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createToken, getUserByEmail, setAuthCookie, verifyPassword } from '@/libs/Auth';
 
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (!validPassword) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -52,14 +53,14 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     console.error('Sign in error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

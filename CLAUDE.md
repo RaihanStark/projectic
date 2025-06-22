@@ -75,3 +75,6 @@ Required for production:
 - Simple JWT-based authentication for user sessions
 - All task management features preserved: urgency levels, labels, status, deadlines
 - Waitlist system maintained for pre-launch email collection
+
+## Development Guidelines
+- Prioritize use of Headless UI before custom build

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createToken, getUserByEmail, hashPassword, setAuthCookie } from '@/libs/Auth';
 import { db } from '@/libs/DB';
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       return NextResponse.json(
         { error: 'Email already registered' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     if (!newUser) {
       return NextResponse.json(
         { error: 'Failed to create user' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -66,14 +67,14 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     console.error('Sign up error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

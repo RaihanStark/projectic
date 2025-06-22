@@ -1,18 +1,60 @@
 'use client';
 
 import type { Task } from '@/utils/taskUtils';
+import Link from 'next/link';
 import {
-  Archive,
-  Clock,
   MoreVertical,
-  Star,
   Trash,
 } from 'lucide-react';
-import Link from 'next/link';
-
+import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
-import { deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName, toggleTaskStar } from '@/utils/taskUtils';
+import { deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
+
+// Portal-based hover tooltip component
+const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 8,
+    });
+    setIsVisible(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsVisible(false);
+  };
+
+  return (
+    <>
+      <div
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {children}
+      </div>
+      {isVisible && typeof window !== 'undefined' && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            left: position.x,
+            top: position.y,
+            transform: 'translateX(-50%) translateY(-100%)',
+            zIndex: 9999,
+          }}
+          className="px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap pointer-events-none"
+        >
+          {text}
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+};
 
 const priorityClasses: { [key: string]: string } = {
   low: 'bg-green-100 text-green-800',
@@ -32,12 +74,22 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; taskId: number | null; taskTitle: string }>({
+    isOpen: false,
+    taskId: null,
+    taskTitle: '',
+  });
 
   const loadTasks = useCallback(async () => {
     try {
       setLoading(true);
       const fetchedTasks = await fetchTasks();
       setTasks(fetchedTasks);
+      // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+      if (window.updateTaskCount) {
+        // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+        window.updateTaskCount(fetchedTasks.length);
+      }
     } catch (err) {
       setError('Failed to load tasks');
       console.error('Error loading tasks:', err);
@@ -60,24 +112,36 @@ export default function Dashboard() {
     };
   }, [loadTasks]);
 
-  const handleDeleteTask = async (id: number) => {
+  const handleDeleteTask = (id: number, title: string) => {
+    setDeleteConfirm({
+      isOpen: true,
+      taskId: id,
+      taskTitle: title,
+    });
+  };
+
+  const confirmDeleteTask = async () => {
+    if (!deleteConfirm.taskId) {
+      return;
+    }
+
     try {
-      await deleteTask(id);
-      setTasks(tasks.filter(task => task.id !== id));
+      await deleteTask(deleteConfirm.taskId);
+      const updatedTasks = tasks.filter(task => task.id !== deleteConfirm.taskId);
+      setTasks(updatedTasks);
+      // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+      if (window.updateTaskCount) {
+        // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+        window.updateTaskCount(updatedTasks.length);
+      }
+      setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
     } catch (err) {
       console.error('Error deleting task:', err);
     }
   };
 
-  const handleToggleStar = async (id: number, currentStarred: boolean) => {
-    try {
-      const updatedTask = await toggleTaskStar(id, !currentStarred);
-      setTasks(tasks.map(task =>
-        task.id === id ? updatedTask : task,
-      ));
-    } catch (err) {
-      console.error('Error toggling star:', err);
-    }
+  const cancelDeleteTask = () => {
+    setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
   };
 
   if (loading) {
@@ -136,22 +200,8 @@ export default function Dashboard() {
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
                   />
-                  <button
-                    type="button"
-                    onClick={() => handleToggleStar(task.id, task.isStarred)}
-                    className="flex-shrink-0"
-                  >
-                    <Star
-                      className={cn(
-                        'h-5 w-5',
-                        task.isStarred
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300 group-hover:text-yellow-400',
-                      )}
-                    />
-                  </button>
                 </div>
-                
+
                 {/* Task Content */}
                 <Link
                   href={`/dashboard/task/${task.id}`}
@@ -172,25 +222,15 @@ export default function Dashboard() {
               <div className="flex items-center gap-3 flex-shrink-0">
                 {/* Action buttons */}
                 <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button
-                    type="button"
-                    className="rounded-md p-2 hover:bg-gray-200"
-                  >
-                    <Archive className="h-4 w-4 text-gray-600" />
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md p-2 hover:bg-gray-200"
-                    onClick={() => handleDeleteTask(task.id)}
-                  >
-                    <Trash className="h-4 w-4 text-gray-600" />
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md p-2 hover:bg-gray-200"
-                  >
-                    <Clock className="h-4 w-4 text-gray-600" />
-                  </button>
+                  <Tooltip text="Delete task">
+                    <button
+                      type="button"
+                      className="rounded-md p-2 hover:bg-gray-200"
+                      onClick={() => handleDeleteTask(task.id, task.title)}
+                    >
+                      <Trash className="h-4 w-4 text-gray-600" />
+                    </button>
+                  </Tooltip>
                 </div>
 
                 {/* Status badges */}
@@ -230,6 +270,38 @@ export default function Dashboard() {
           </li>
         ))}
       </ul>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete Task
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete "
+              {deleteConfirm.taskTitle}
+              "? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={cancelDeleteTask}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteTask}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

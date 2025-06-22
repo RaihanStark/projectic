@@ -77,6 +77,11 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; taskId: number | null; taskTitle: string }>({
+    isOpen: false,
+    taskId: null,
+    taskTitle: '',
+  });
 
   const loadTasks = useCallback(async () => {
     try {
@@ -105,13 +110,28 @@ export default function Dashboard() {
     };
   }, [loadTasks]);
 
-  const handleDeleteTask = async (id: number) => {
+  const handleDeleteTask = (id: number, title: string) => {
+    setDeleteConfirm({
+      isOpen: true,
+      taskId: id,
+      taskTitle: title,
+    });
+  };
+
+  const confirmDeleteTask = async () => {
+    if (!deleteConfirm.taskId) return;
+
     try {
-      await deleteTask(id);
-      setTasks(tasks.filter(task => task.id !== id));
+      await deleteTask(deleteConfirm.taskId);
+      setTasks(tasks.filter(task => task.id !== deleteConfirm.taskId));
+      setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
     } catch (err) {
       console.error('Error deleting task:', err);
     }
+  };
+
+  const cancelDeleteTask = () => {
+    setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
   };
 
   const handleToggleStar = async (id: number, currentStarred: boolean) => {
@@ -223,7 +243,7 @@ export default function Dashboard() {
                     <button
                       type="button"
                       className="rounded-md p-2 hover:bg-gray-200"
-                      onClick={() => handleDeleteTask(task.id)}
+                      onClick={() => handleDeleteTask(task.id, task.title)}
                     >
                       <Trash className="h-4 w-4 text-gray-600" />
                     </button>
@@ -267,6 +287,36 @@ export default function Dashboard() {
           </li>
         ))}
       </ul>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete Task
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete "{deleteConfirm.taskTitle}"? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={cancelDeleteTask}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteTask}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

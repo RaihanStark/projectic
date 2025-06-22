@@ -153,11 +153,21 @@ export default function Dashboard() {
     setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
   };
 
-  // Filter tasks based on active tab
-  const filteredTasks = tasks.filter(task => {
-    if (activeTab === 'all') return true;
-    return task.status === activeTab;
-  });
+  // Filter and sort tasks based on active tab
+  const filteredTasks = tasks
+    .filter(task => {
+      if (activeTab === 'all') return true;
+      return task.status === activeTab;
+    })
+    .sort((a, b) => {
+      // For "All Tasks" tab, move done tasks to bottom
+      if (activeTab === 'all') {
+        if (a.status === 'done' && b.status !== 'done') return 1;
+        if (a.status !== 'done' && b.status === 'done') return -1;
+      }
+      // Keep original order for same status
+      return 0;
+    });
 
   // Get counts for each tab
   const tabCounts = {
@@ -410,7 +420,10 @@ export default function Dashboard() {
           filteredTasks.map(task => (
           <li
             key={task.id}
-            className="group p-4 transition-colors hover:bg-gray-50"
+            className={cn(
+              "group p-4 transition-colors hover:bg-gray-50",
+              task.status === 'done' && "opacity-60 bg-gray-50/50"
+            )}
           >
             <div className="flex items-start gap-3 w-full">
               {/* Left side - Checkbox, Star, and Task Info */}
@@ -430,10 +443,20 @@ export default function Dashboard() {
                   className="flex-1 min-w-0 hover:bg-gray-100 rounded-lg p-2 -m-2 transition-colors"
                 >
                   <div className="space-y-1">
-                    <p className="font-medium text-gray-900 line-clamp-1">
+                    <p className={cn(
+                      "font-medium line-clamp-1",
+                      task.status === 'done' 
+                        ? "text-gray-500 line-through" 
+                        : "text-gray-900"
+                    )}>
                       {task.title}
                     </p>
-                    <p className="text-sm text-gray-500 line-clamp-2">
+                    <p className={cn(
+                      "text-sm line-clamp-2",
+                      task.status === 'done' 
+                        ? "text-gray-400" 
+                        : "text-gray-500"
+                    )}>
                       {task.description || 'No description'}
                     </p>
                   </div>
@@ -477,14 +500,20 @@ export default function Dashboard() {
 
                 {/* Date and more menu */}
                 <div className="flex items-center gap-2">
-                  <p className="text-sm text-gray-500 whitespace-nowrap">
+                  <p className={cn(
+                    "text-sm whitespace-nowrap",
+                    task.status === 'done' ? "text-gray-400" : "text-gray-500"
+                  )}>
                     {formatDate(task.deadline)}
                   </p>
                   <button
                     type="button"
                     className="rounded-md p-2 hover:bg-gray-200"
                   >
-                    <MoreVertical className="h-4 w-4 text-gray-600" />
+                    <MoreVertical className={cn(
+                      "h-4 w-4",
+                      task.status === 'done' ? "text-gray-400" : "text-gray-600"
+                    )} />
                   </button>
                 </div>
               </div>

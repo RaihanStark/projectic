@@ -2,8 +2,6 @@
 
 import type { Task } from '@/utils/taskUtils';
 import {
-  Archive,
-  Clock,
   MoreVertical,
   Star,
   Trash,
@@ -175,21 +173,9 @@ export default function Dashboard() {
                   <button
                     type="button"
                     className="rounded-md p-2 hover:bg-gray-200"
-                  >
-                    <Archive className="h-4 w-4 text-gray-600" />
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md p-2 hover:bg-gray-200"
                     onClick={() => handleDeleteTask(task.id)}
                   >
                     <Trash className="h-4 w-4 text-gray-600" />
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md p-2 hover:bg-gray-200"
-                  >
-                    <Clock className="h-4 w-4 text-gray-600" />
                   </button>
                 </div>
 

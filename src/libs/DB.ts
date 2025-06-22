@@ -34,7 +34,7 @@ try {
     FROM information_schema.tables 
     WHERE table_schema = 'public' AND table_name = 'waitlist'
   `);
-  
+
   if (tableExists.rows.length === 0) {
     // Create waitlist table if it doesn't exist
     await db.execute(`
@@ -46,7 +46,7 @@ try {
       );
     `);
   }
-  
+
   // Run migrations carefully
   await migrate(db, {
     migrationsFolder: path.join(process.cwd(), 'migrations'),

@@ -16,7 +16,7 @@ export default async function middleware(request: NextRequest) {
   if (isProtectedRoute(pathname)) {
     // Check for auth cookie
     const authToken = request.cookies.get('auth-token');
-    
+
     if (!authToken) {
       const signInUrl = new URL('/sign-in', request.url);
       return NextResponse.redirect(signInUrl);
@@ -26,7 +26,7 @@ export default async function middleware(request: NextRequest) {
   // If user has auth token and tries to access auth pages, redirect to dashboard
   if (isAuthPage(pathname)) {
     const authToken = request.cookies.get('auth-token');
-    
+
     if (authToken) {
       const dashboardUrl = new URL('/dashboard', request.url);
       return NextResponse.redirect(dashboardUrl);

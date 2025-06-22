@@ -87,7 +87,12 @@ export const LandingLayout = (props: {
 
           <div className="border-t border-gray-200 mt-8 pt-8">
             <p className="text-center text-gray-500 text-sm">
-              © {new Date().getFullYear()} {AppConfig.name}. All rights reserved.
+              ©
+              {' '}
+              {new Date().getFullYear()}
+              {' '}
+              {AppConfig.name}
+              . All rights reserved.
             </p>
           </div>
         </div>

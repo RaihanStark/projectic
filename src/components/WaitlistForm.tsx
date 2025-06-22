@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 
-interface WaitlistFormProps {
+type WaitlistFormProps = {
   variant?: 'light' | 'dark';
-}
+};
 
 export const WaitlistForm = ({ variant = 'light' }: WaitlistFormProps) => {
   const [email, setEmail] = useState('');
@@ -27,7 +27,7 @@ export const WaitlistForm = ({ variant = 'light' }: WaitlistFormProps) => {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setMessage(data.message);
         setIsSuccess(true);
@@ -53,11 +53,11 @@ export const WaitlistForm = ({ variant = 'light' }: WaitlistFormProps) => {
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             placeholder="Enter your email address"
             className={`flex-1 px-4 py-3 text-base rounded-lg border-2 transition-all duration-200 ${
-              isDark 
-                ? 'bg-white text-gray-900 border-gray-300 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20' 
+              isDark
+                ? 'bg-white text-gray-900 border-gray-300 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
                 : 'bg-white text-gray-900 border-gray-300 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
             }`}
             required
@@ -71,21 +71,23 @@ export const WaitlistForm = ({ variant = 'light' }: WaitlistFormProps) => {
             {isLoading ? 'Joining...' : 'Join Waitlist'}
           </button>
         </div>
-        
+
         {message && (
           <div className={`text-center text-sm font-medium ${
-            isSuccess 
+            isSuccess
               ? isDark ? 'text-green-400' : 'text-green-600'
               : isDark ? 'text-red-400' : 'text-red-600'
-          }`}>
+          }`}
+          >
             {message}
           </div>
         )}
       </form>
-      
+
       <p className={`text-center text-sm mt-3 ${
         isDark ? 'text-gray-300' : 'text-gray-600'
-      }`}>
+      }`}
+      >
         Be the first to know when we launch! 🚀
       </p>
     </div>

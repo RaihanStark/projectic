@@ -2,7 +2,7 @@
 
 import { Bell, LogOut, Search, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const Header = () => {
   const router = useRouter();

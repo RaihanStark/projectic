@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { User } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function UserProfilePage() {
   const [user, setUser] = useState<{ id: number; email: string; name?: string } | null>(null);
@@ -52,23 +52,26 @@ export default function UserProfilePage() {
             <p className="text-gray-600">Manage your account information</p>
           </div>
         </div>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <p className="mt-1 text-lg text-gray-900">{user.email}</p>
           </div>
-          
+
           {user.name && (
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>
               <p className="mt-1 text-lg text-gray-900">{user.name}</p>
             </div>
           )}
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700">User ID</label>
-            <p className="mt-1 text-lg text-gray-900">#{user.id}</p>
+            <p className="mt-1 text-lg text-gray-900">
+              #
+              {user.id}
+            </p>
           </div>
         </div>
       </div>

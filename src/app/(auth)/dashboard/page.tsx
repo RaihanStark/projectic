@@ -1,6 +1,7 @@
 'use client';
 
 import type { Task } from '@/utils/taskUtils';
+import { useState } from 'react';
 import {
   MoreVertical,
   Star,
@@ -8,9 +9,29 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { cn } from '@/utils/cn';
 import { deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName, toggleTaskStar } from '@/utils/taskUtils';
+
+// Simple hover tooltip component
+const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      {children}
+      {isVisible && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-10 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+          {text}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const priorityClasses: { [key: string]: string } = {
   low: 'bg-green-100 text-green-800',
@@ -134,22 +155,24 @@ export default function Dashboard() {
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
                   />
-                  <button
-                    type="button"
-                    onClick={() => handleToggleStar(task.id, task.isStarred)}
-                    className="flex-shrink-0"
-                  >
-                    <Star
-                      className={cn(
-                        'h-5 w-5',
-                        task.isStarred
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300 group-hover:text-yellow-400',
-                      )}
-                    />
-                  </button>
+                  <Tooltip text={task.isStarred ? 'Remove from favorites' : 'Add to favorites'}>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStar(task.id, task.isStarred)}
+                      className="flex-shrink-0"
+                    >
+                      <Star
+                        className={cn(
+                          'h-5 w-5',
+                          task.isStarred
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300 group-hover:text-yellow-400',
+                        )}
+                      />
+                    </button>
+                  </Tooltip>
                 </div>
-                
+
                 {/* Task Content */}
                 <Link
                   href={`/dashboard/task/${task.id}`}
@@ -170,13 +193,15 @@ export default function Dashboard() {
               <div className="flex items-center gap-3 flex-shrink-0">
                 {/* Action buttons */}
                 <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button
-                    type="button"
-                    className="rounded-md p-2 hover:bg-gray-200"
-                    onClick={() => handleDeleteTask(task.id)}
-                  >
-                    <Trash className="h-4 w-4 text-gray-600" />
-                  </button>
+                  <Tooltip text="Delete task">
+                    <button
+                      type="button"
+                      className="rounded-md p-2 hover:bg-gray-200"
+                      onClick={() => handleDeleteTask(task.id)}
+                    >
+                      <Trash className="h-4 w-4 text-gray-600" />
+                    </button>
+                  </Tooltip>
                 </div>
 
                 {/* Status badges */}

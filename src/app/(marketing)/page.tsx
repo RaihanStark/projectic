@@ -1,4 +1,4 @@
-import { CheckCircle, Calendar, Users, Zap } from 'lucide-react';
+import { Calendar, CheckCircle, Users, Zap } from 'lucide-react';
 import { WaitlistForm } from '@/components/WaitlistForm';
 
 export async function generateMetadata() {
@@ -9,7 +9,6 @@ export async function generateMetadata() {
 }
 
 export default function Index() {
-
   return (
     <>
       {/* Hero Section */}
@@ -18,33 +17,33 @@ export default function Index() {
         <div className="absolute inset-0 bg-grid-gray-900/[0.04] bg-[size:20px_20px]" />
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000" />
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-6">
-                🚀 Coming Soon
-              </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-6">
+              🚀 Coming Soon
+            </span>
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
               Streamline Your
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> Workflow</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Organize tasks, track progress, and collaborate with your team using our intuitive task management platform. 
+              Organize tasks, track progress, and collaborate with your team using our intuitive task management platform.
               Built for modern teams who value simplicity and efficiency.
             </p>
             <div className="mb-12">
               <WaitlistForm />
             </div>
           </div>
-          
+
           {/* Dashboard Preview */}
           <div className="mt-20 max-w-6xl mx-auto">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl transform rotate-1"></div>
               <div className="relative transform -rotate-1 hover:rotate-0 transition-transform duration-300">
-                <img 
-                  src="/assets/images/hero.png" 
-                  alt="Projectic Dashboard Preview" 
+                <img
+                  src="/assets/images/hero.png"
+                  alt="Projectic Dashboard Preview"
                   className="w-full h-auto rounded-2xl shadow-2xl border border-gray-200"
                 />
               </div>
@@ -73,7 +72,7 @@ export default function Index() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Task Management</h3>
               <p className="text-gray-600 leading-relaxed">
-                Create, organize, and track tasks with deadlines, priorities, and status updates. 
+                Create, organize, and track tasks with deadlines, priorities, and status updates.
                 Never miss an important deadline again.
               </p>
             </div>
@@ -84,7 +83,7 @@ export default function Index() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Team Collaboration</h3>
               <p className="text-gray-600 leading-relaxed">
-                Work together seamlessly with shared projects, comments, and real-time updates. 
+                Work together seamlessly with shared projects, comments, and real-time updates.
                 Keep everyone on the same page.
               </p>
             </div>
@@ -95,7 +94,7 @@ export default function Index() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Smart Scheduling</h3>
               <p className="text-gray-600 leading-relaxed">
-                Intelligent deadline management with calendar integration and automated reminders. 
+                Intelligent deadline management with calendar integration and automated reminders.
                 Stay ahead of your schedule.
               </p>
             </div>
@@ -106,7 +105,7 @@ export default function Index() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Lightning Fast</h3>
               <p className="text-gray-600 leading-relaxed">
-                Built with modern technology for instant loading and real-time updates. 
+                Built with modern technology for instant loading and real-time updates.
                 No more waiting around.
               </p>
             </div>
@@ -117,7 +116,7 @@ export default function Index() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Priority Management</h3>
               <p className="text-gray-600 leading-relaxed">
-                Set priorities and urgency levels to focus on what matters most. 
+                Set priorities and urgency levels to focus on what matters most.
                 Visual indicators keep you focused.
               </p>
             </div>
@@ -128,7 +127,7 @@ export default function Index() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Secure & Private</h3>
               <p className="text-gray-600 leading-relaxed">
-                Your data is protected with enterprise-grade security and privacy controls. 
+                Your data is protected with enterprise-grade security and privacy controls.
                 Work with confidence.
               </p>
             </div>

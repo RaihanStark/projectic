@@ -88,6 +88,11 @@ export default function Dashboard() {
       setLoading(true);
       const fetchedTasks = await fetchTasks();
       setTasks(fetchedTasks);
+      // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+      if (window.updateTaskCount) {
+        // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+        window.updateTaskCount(fetchedTasks.length);
+      }
     } catch (err) {
       setError('Failed to load tasks');
       console.error('Error loading tasks:', err);
@@ -123,7 +128,13 @@ export default function Dashboard() {
 
     try {
       await deleteTask(deleteConfirm.taskId);
-      setTasks(tasks.filter(task => task.id !== deleteConfirm.taskId));
+      const updatedTasks = tasks.filter(task => task.id !== deleteConfirm.taskId);
+      setTasks(updatedTasks);
+      // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+      if (window.updateTaskCount) {
+        // @ts-expect-error: Accessing updateTaskCount on window for task count updates
+        window.updateTaskCount(updatedTasks.length);
+      }
       setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
     } catch (err) {
       console.error('Error deleting task:', err);

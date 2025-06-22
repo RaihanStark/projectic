@@ -10,9 +10,10 @@ import Link from 'next/link';
 
 type SidebarProps = {
   onNewTaskClick: () => void;
+  taskCount?: number;
 };
 
-const Sidebar = ({ onNewTaskClick }: SidebarProps) => {
+const Sidebar = ({ onNewTaskClick, taskCount = 0 }: SidebarProps) => {
   return (
     <aside className="hidden h-screen w-64 flex-col border-r border-gray-200 bg-white md:flex">
       <div className="flex h-16 items-center border-b border-gray-200 px-6">
@@ -40,7 +41,7 @@ const Sidebar = ({ onNewTaskClick }: SidebarProps) => {
             <Home className="h-4 w-4" />
             All Tasks
             <span className="ml-auto flex h-6 w-9 items-center justify-center rounded-full bg-gray-200 text-xs">
-              24
+              {taskCount}
             </span>
           </Link>
         </nav>

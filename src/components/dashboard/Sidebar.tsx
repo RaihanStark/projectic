@@ -23,7 +23,7 @@ const mockProjects = [
   { id: 3, name: 'Mobile App', color: '#f59e0b', taskCount: 4 },
 ];
 
-const Sidebar = ({ onNewTaskClick, onNewProjectClick }: SidebarProps) => {
+const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps) => {
   const [currentPath, setCurrentPath] = useState('/dashboard');
 
   return (

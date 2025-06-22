@@ -21,6 +21,23 @@ import TaskListSkeleton from '@/components/TaskListSkeleton';
 import { useTaskStore } from '@/stores/taskStore';
 import toast from 'react-hot-toast';
 
+
+// Mock project data for displaying project badges
+const mockProjects = {
+  1: { name: 'Work Website', color: '#3b82f6' },
+  2: { name: 'Personal', color: '#10b981' },
+  3: { name: 'Mobile App', color: '#f59e0b' },
+};
+
+// Mock project assignment for tasks (in real app, this would come from the database)
+const mockTaskProjects = {
+  1: 1, // Task 1 belongs to Work Website
+  2: 1, // Task 2 belongs to Work Website  
+  3: 2, // Task 3 belongs to Personal
+  4: 2, // Task 4 belongs to Personal
+  5: 3, // Task 5 belongs to Mobile App
+};
+
 // Portal-based hover tooltip component
 const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -517,6 +534,21 @@ export default function Dashboard() {
                     )}>
                       {task.title}
                     </p>
+                       {/* Project Badge */}
+                       {mockTaskProjects[task.id as keyof typeof mockTaskProjects] && (
+                      <div className="flex items-center gap-2 mb-1">
+                        <Circle
+                          className="h-3 w-3"
+                          style={{
+                            color: mockProjects[mockTaskProjects[task.id as keyof typeof mockTaskProjects] as keyof typeof mockProjects]?.color,
+                            fill: mockProjects[mockTaskProjects[task.id as keyof typeof mockTaskProjects] as keyof typeof mockProjects]?.color,
+                          }}
+                        />
+                        <span className="text-xs text-gray-600 font-medium">
+                          {mockProjects[mockTaskProjects[task.id as keyof typeof mockTaskProjects] as keyof typeof mockProjects]?.name}
+                        </span>
+                      </div>
+                    )}
                     <p className={cn(
                       "text-sm line-clamp-2",
                       task.status === 'done' 

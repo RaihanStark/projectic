@@ -81,3 +81,6 @@ Required for production:
 
 ## Anti-Patterns
 - Do not run `npm run dev`
+
+## Code Quality Rules
+- Do not check types

@@ -1,10 +1,39 @@
 import { db } from '@/libs/DB';
-import { tasksSchema, subTasksSchema } from '@/models/Schema';
+import { tasksSchema, subTasksSchema, projectsSchema } from '@/models/Schema';
 
 export async function seedSampleTasks(userId: number) {
+  // First create some sample projects
+  const sampleProjects = [
+    {
+      userId,
+      name: 'Work Website',
+      description: 'Website redesign and development project',
+      color: '#3b82f6',
+    },
+    {
+      userId,
+      name: 'Personal',
+      description: 'Personal tasks and daily activities',
+      color: '#10b981',
+    },
+    {
+      userId,
+      name: 'Mobile App',
+      description: 'Complete redesign of mobile application',
+      color: '#f59e0b',
+    },
+  ];
+
+  const insertedProjects = await db
+    .insert(projectsSchema)
+    .values(sampleProjects)
+    .returning();
+
+  const [workProject, personalProject, mobileProject] = insertedProjects;
   const sampleTasks = [
     {
       userId,
+      projectId: workProject?.id,
       title: 'Design the new landing page',
       description: 'Create comprehensive mockups for the new landing page in Figma. The design should focus on user experience and conversion optimization.',
       label: 'Design',
@@ -14,6 +43,7 @@ export async function seedSampleTasks(userId: number) {
     },
     {
       userId,
+      projectId: workProject?.id,
       title: 'Implement user authentication system',
       description: 'Set up a complete authentication system with JWT. This includes implementing sign-in, sign-up, password reset, and session management.',
       label: 'Backend',
@@ -23,6 +53,7 @@ export async function seedSampleTasks(userId: number) {
     },
     {
       userId,
+      projectId: workProject?.id,
       title: 'Deploy application to production',
       description: 'Configure and deploy the application to production with proper CI/CD pipeline setup. This includes setting up environment variables and monitoring.',
       label: 'DevOps',
@@ -32,6 +63,7 @@ export async function seedSampleTasks(userId: number) {
     },
     {
       userId,
+      projectId: personalProject?.id,
       title: 'Write comprehensive API documentation',
       description: 'Create detailed API documentation using OpenAPI/Swagger. Include examples, error codes, and authentication requirements for all endpoints.',
       label: 'Documentation',
@@ -41,6 +73,7 @@ export async function seedSampleTasks(userId: number) {
     },
     {
       userId,
+      projectId: mobileProject?.id,
       title: 'Implement real-time notifications',
       description: 'Add WebSocket support for real-time notifications. Users should receive instant updates for task assignments, comments, and status changes.',
       label: 'Feature',
@@ -50,6 +83,7 @@ export async function seedSampleTasks(userId: number) {
     },
     {
       userId,
+      projectId: workProject?.id,
       title: 'Set up automated testing pipeline',
       description: 'Configure comprehensive testing including unit tests, integration tests, and E2E tests. Set up GitHub Actions for automated testing on PRs.',
       label: 'Testing',
@@ -59,6 +93,7 @@ export async function seedSampleTasks(userId: number) {
     },
     {
       userId,
+      projectId: workProject?.id,
       title: 'Database performance optimization',
       description: 'Analyze and optimize database queries, add proper indexes, and implement caching strategies to improve application performance.',
       label: 'Performance',
@@ -68,6 +103,7 @@ export async function seedSampleTasks(userId: number) {
     },
     {
       userId,
+      projectId: mobileProject?.id,
       title: 'Mobile responsive design',
       description: 'Ensure the application works perfectly on mobile devices. Test and optimize for various screen sizes and touch interactions.',
       label: 'Frontend',
@@ -77,6 +113,7 @@ export async function seedSampleTasks(userId: number) {
     },
     {
       userId,
+      projectId: workProject?.id,
       title: 'Security audit and penetration testing',
       description: 'Conduct thorough security audit, implement security headers, and perform penetration testing to identify vulnerabilities.',
       label: 'Security',
@@ -86,6 +123,7 @@ export async function seedSampleTasks(userId: number) {
     },
     {
       userId,
+      projectId: mobileProject?.id,
       title: 'User onboarding flow',
       description: 'Design and implement an intuitive onboarding process for new users. Include guided tours, tooltips, and progressive disclosure.',
       label: 'UX',

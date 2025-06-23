@@ -12,40 +12,13 @@ import {
   Trash,
 } from 'lucide-react';
 import Link from 'next/link';
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { cn } from '@/utils/cn';
-import { formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
-
-// Mock project data
-const mockProjects = {
-  1: {
-    id: 1,
-    name: 'Work Website',
-    description: 'Website redesign and development project',
-    color: '#3b82f6',
-    totalTasks: 10,
-    completedTasks: 8,
-    createdAt: '2024-12-01',
-  },
-  2: {
-    id: 2,
-    name: 'Personal',
-    description: 'Personal tasks and daily activities',
-    color: '#10b981',
-    totalTasks: 8,
-    completedTasks: 2,
-    createdAt: '2024-12-10',
-  },
-  3: {
-    id: 3,
-    name: 'Mobile App',
-    description: 'Complete redesign of mobile application',
-    color: '#f59e0b',
-    totalTasks: 4,
-    completedTasks: 0,
-    createdAt: '2024-12-15',
-  },
-};
+import { formatDate, getStatusDisplayName, getUrgencyDisplayName, type Task } from '@/utils/taskUtils';
+import toast from 'react-hot-toast';
+import NewTaskModal from '@/components/NewTaskModal';
+import { useTaskStore } from '@/stores/taskStore';
+import { useProjectStore } from '@/stores/projectStore';
 
 // Mock tasks for each project
 const mockProjectTasks = {
@@ -129,14 +102,98 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
   const { id } = use(params);
   const projectId = Number.parseInt(id, 10);
 
-  const [project] = useState(mockProjects[projectId as keyof typeof mockProjects]);
-  const [tasks, setTasks] = useState(mockProjectTasks[projectId as keyof typeof mockProjectTasks] || []);
+  const [project, setProject] = useState<any>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { updateTask } = useTaskStore();
+  const { updateProject } = useProjectStore();
 
-  if (!project) {
+  useEffect(() => {
+    fetchProjectAndTasks();
+  }, [projectId]);
+
+  const fetchProjectAndTasks = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch project details
+      const projectResponse = await fetch(`/dashboard/api/projects/${projectId}`);
+      if (!projectResponse.ok) {
+        throw new Error('Failed to fetch project');
+      }
+      const projectData = await projectResponse.json();
+      setProject(projectData);
+
+      // Fetch tasks for this project
+      const tasksResponse = await fetch(`/dashboard/api/projects/${projectId}/tasks`);
+      if (!tasksResponse.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      const tasksData = await tasksResponse.json();
+      setTasks(tasksData);
+    } catch (error) {
+      console.error('Error fetching project data:', error);
+      setError('Failed to load project');
+      toast.error('Failed to load project');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateTask = async (newTask: Task) => {
+    await fetchProjectAndTasks();
+    toast.success('Task created successfully');
+  };
+
+  const handleToggleTaskStatus = async (taskId: number, currentStatus: string) => {
+    const newStatus = currentStatus === 'done' ? 'todo' : 'done';
+    try {
+      const response = await fetch(`/dashboard/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update task');
+      }
+
+      const updatedTask = await response.json();
+      setTasks(tasks.map(task => 
+        task.id === taskId ? updatedTask : task
+      ));
+      updateTask(taskId, { status: newStatus });
+      
+      // Update project stats
+      await fetchProjectAndTasks();
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast.error('Failed to update task');
+    }
+  };
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-gray-500">Project not found</div>
+        <div className="text-gray-500">Loading project...</div>
+      </div>
+    );
+  }
+
+  if (error || !project) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8">
+        <div className="text-red-600 mb-4">{error || 'Project not found'}</div>
+        <Link
+          href="/dashboard/projects"
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        >
+          Back to Projects
+        </Link>
       </div>
     );
   }
@@ -147,8 +204,25 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
     ));
   };
 
-  const handleDeleteTask = (taskId: number) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      const response = await fetch(`/dashboard/api/tasks/${taskId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
+
+      setTasks(tasks.filter(task => task.id !== taskId));
+      toast.success('Task deleted successfully');
+      
+      // Update project stats
+      await fetchProjectAndTasks();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Failed to delete task');
+    }
   };
 
   const completedTasks = tasks.filter(task => task.status === 'done').length;
@@ -319,7 +393,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                             type="checkbox"
                             checked={task.status === 'done'}
                             className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
-                            onChange={() => {}}
+                            onChange={() => handleToggleTaskStatus(task.id, task.status)}
                           />
                           <button
                             type="button"
@@ -430,34 +504,13 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
             </div>
           )}
 
-      {/* New Task Modal Placeholder */}
-      {showNewTaskModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">
-              Add Task to
-              {project.name}
-            </h2>
-            <p className="text-gray-600 mb-4">Task creation modal will be implemented here</p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowNewTaskModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowNewTaskModal(false)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                Add Task
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* New Task Modal */}
+      <NewTaskModal
+        isOpen={showNewTaskModal}
+        onClose={() => setShowNewTaskModal(false)}
+        onSubmit={handleCreateTask}
+        defaultProjectId={projectId}
+      />
     </div>
   );
 }

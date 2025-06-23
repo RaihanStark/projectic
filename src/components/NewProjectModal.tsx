@@ -53,15 +53,24 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit }: NewProjectModalProps) =>
     setError(null);
 
     try {
-      // In real app, this would make an API call
-      const newProject = {
-        id: Date.now(), // Mock ID
-        ...project,
-        createdAt: new Date().toISOString(),
-        totalTasks: 0,
-        completedTasks: 0,
-      };
+      const response = await fetch('/dashboard/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: project.name.trim(),
+          description: project.description.trim() || null,
+          color: project.color,
+        }),
+      });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create project');
+      }
+
+      const newProject = await response.json();
       onSubmit(newProject);
       onClose();
 
@@ -72,7 +81,7 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit }: NewProjectModalProps) =>
         color: projectColors[0].value,
       });
     } catch (err) {
-      setError('Failed to create project. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to create project. Please try again.');
       console.error('Error creating project:', err);
     } finally {
       setLoading(false);

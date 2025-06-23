@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MoreVertical,
   Plus,
@@ -10,60 +10,78 @@ import {
   Clock,
   Archive,
   Edit,
-  Trash,
   Star,
 } from 'lucide-react';
-
-// Mock project data for UI display
-const mockProjects = [
-  {
-    id: 1,
-    name: 'Work Website',
-    description: 'Website redesign and development project',
-    color: '#3b82f6',
-    totalTasks: 10,
-    completedTasks: 8,
-    overdueTasks: 2,
-    dueTodayTasks: 3,
-    lastActivity: '2 hours ago',
-    isStarred: true,
-  },
-  {
-    id: 2,
-    name: 'Personal',
-    description: 'Personal tasks and daily activities',
-    color: '#10b981',
-    totalTasks: 8,
-    completedTasks: 2,
-    overdueTasks: 0,
-    dueTodayTasks: 1,
-    lastActivity: 'yesterday',
-    isStarred: false,
-  },
-  {
-    id: 3,
-    name: 'Mobile App',
-    description: 'Complete redesign of mobile application',
-    color: '#f59e0b',
-    totalTasks: 4,
-    completedTasks: 0,
-    overdueTasks: 0,
-    dueTodayTasks: 0,
-    lastActivity: '3 days ago',
-    isStarred: false,
-  },
-];
+import NewProjectModal from '@/components/NewProjectModal';
+import { useProjectStore } from '@/stores/projectStore';
+import toast from 'react-hot-toast';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState(mockProjects);
+  const { projects, setProjects, loading, error, setLoading, setError } = useProjectStore();
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [starredProjects, setStarredProjects] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/dashboard/api/projects');
+      if (!response.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setError('Failed to load projects');
+      toast.error('Failed to load projects');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleStarProject = (projectId: number) => {
-    setProjects(projects.map(project => 
-      project.id === projectId 
-        ? { ...project, isStarred: !project.isStarred }
-        : project
-    ));
+    setStarredProjects(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(projectId)) {
+        newSet.delete(projectId);
+      } else {
+        newSet.add(projectId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCreateProject = async (newProject: any) => {
+    await fetchProjects();
+    toast.success('Project created successfully');
+  };
+
+  const handleArchiveProject = async (projectId: number) => {
+    try {
+      const response = await fetch(`/dashboard/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isArchived: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to archive project');
+      }
+
+      await fetchProjects();
+      toast.success('Project archived successfully');
+    } catch (error) {
+      console.error('Error archiving project:', error);
+      toast.error('Failed to archive project');
+    }
   };
 
   const getProgressPercentage = (completed: number, total: number) => {
@@ -73,6 +91,38 @@ export default function ProjectsPage() {
   const getProgressBarWidth = (completed: number, total: number) => {
     return total > 0 ? (completed / total) * 100 : 0;
   };
+
+  const formatLastActivity = (updatedAt: Date) => {
+    try {
+      return formatDistanceToNow(new Date(updatedAt), { addSuffix: true });
+    } catch (error) {
+      return 'recently';
+    }
+  };
+
+  const activeProjects = projects.filter(p => !p.isArchived);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="text-gray-500">Loading projects...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12">
+        <div className="text-red-600 mb-4">{error}</div>
+        <button
+          onClick={fetchProjects}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -92,7 +142,7 @@ export default function ProjectsPage() {
       </div>
 
       <div className="grid gap-4">
-        {projects.map((project) => (
+        {activeProjects.map((project) => (
           <div
             key={project.id}
             className="group rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
@@ -118,7 +168,7 @@ export default function ProjectsPage() {
                     >
                       <Star
                         className={`h-4 w-4 ${
-                          project.isStarred
+                          starredProjects.has(project.id)
                             ? 'fill-yellow-400 text-yellow-400'
                             : 'text-gray-300 hover:text-yellow-400'
                         }`}
@@ -131,10 +181,10 @@ export default function ProjectsPage() {
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700">
-                        {project.completedTasks}/{project.totalTasks} tasks completed
+                        {project.completedTasks || 0}/{project.totalTasks || 0} tasks completed
                       </span>
                       <span className="text-sm text-gray-500">
-                        {getProgressPercentage(project.completedTasks, project.totalTasks)}%
+                        {getProgressPercentage(project.completedTasks || 0, project.totalTasks || 0)}%
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -142,7 +192,7 @@ export default function ProjectsPage() {
                         className="h-2 rounded-full transition-all duration-300"
                         style={{
                           backgroundColor: project.color,
-                          width: `${getProgressBarWidth(project.completedTasks, project.totalTasks)}%`,
+                          width: `${getProgressBarWidth(project.completedTasks || 0, project.totalTasks || 0)}%`,
                         }}
                       />
                     </div>
@@ -150,13 +200,13 @@ export default function ProjectsPage() {
                   
                   {/* Project Stats */}
                   <div className="flex items-center gap-4 text-sm text-gray-500">
-                    {project.overdueTasks > 0 && (
+                    {project.overdueTasks && project.overdueTasks > 0 && (
                       <div className="flex items-center gap-1">
                         <AlertCircle className="h-4 w-4 text-red-500" />
                         <span>{project.overdueTasks} overdue</span>
                       </div>
                     )}
-                    {project.dueTodayTasks > 0 && (
+                    {project.dueTodayTasks && project.dueTodayTasks > 0 && (
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-orange-500" />
                         <span>{project.dueTodayTasks} due today</span>
@@ -164,7 +214,7 @@ export default function ProjectsPage() {
                     )}
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>Updated {project.lastActivity}</span>
+                      <span>Updated {formatLastActivity(project.updatedAt)}</span>
                     </div>
                   </div>
                 </div>
@@ -183,6 +233,7 @@ export default function ProjectsPage() {
                   type="button"
                   className="rounded-md p-2 hover:bg-gray-100 transition-colors"
                   title="Archive Project"
+                  onClick={() => handleArchiveProject(project.id)}
                 >
                   <Archive className="h-4 w-4 text-gray-600" />
                 </button>
@@ -202,7 +253,7 @@ export default function ProjectsPage() {
       </div>
 
       {/* Empty State */}
-      {projects.length === 0 && (
+      {activeProjects.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12">
           <div className="text-gray-400 mb-4">
             <CheckCircle className="h-12 w-12" />
@@ -220,31 +271,12 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {/* New Project Modal Placeholder */}
-      {showNewProjectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Create New Project</h2>
-            <p className="text-gray-600 mb-4">Project creation modal will be implemented here</p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowNewProjectModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowNewProjectModal(false)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* New Project Modal */}
+      <NewProjectModal
+        isOpen={showNewProjectModal}
+        onClose={() => setShowNewProjectModal(false)}
+        onSubmit={handleCreateProject}
+      />
     </div>
   );
 }

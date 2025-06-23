@@ -8,7 +8,9 @@ import {
   FolderOpen,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useProjectStore } from '@/stores/projectStore';
+import { usePathname } from 'next/navigation';
 
 type SidebarProps = {
   onNewTaskClick: () => void;
@@ -16,15 +18,29 @@ type SidebarProps = {
   taskCount?: number;
 };
 
-// Mock project data for UI display
-const mockProjects = [
-  { id: 1, name: 'Work Website', color: '#3b82f6', taskCount: 8 },
-  { id: 2, name: 'Personal', color: '#10b981', taskCount: 12 },
-  { id: 3, name: 'Mobile App', color: '#f59e0b', taskCount: 4 },
-];
-
 const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps) => {
-  const [currentPath, setCurrentPath] = useState('/dashboard');
+  const pathname = usePathname();
+  const { projects, getActiveProjects, setProjects } = useProjectStore();
+  const activeProjects = getActiveProjects();
+
+  useEffect(() => {
+    // Fetch projects if not already loaded
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/dashboard/api/projects');
+        if (response.ok) {
+          const data = await response.json();
+          setProjects(data);
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      }
+    };
+
+    if (projects.length === 0) {
+      fetchProjects();
+    }
+  }, [projects.length, setProjects]);
 
   return (
     <aside className="hidden h-screen w-64 flex-col border-r border-gray-200 bg-white md:flex">
@@ -49,11 +65,10 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
           <Link
             href="/dashboard"
             className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              currentPath === '/dashboard' 
+              pathname === '/dashboard' 
                 ? 'bg-gray-100 text-gray-900' 
                 : 'text-gray-500 hover:text-gray-900'
             }`}
-            onClick={() => setCurrentPath('/dashboard')}
           >
             <Home className="h-4 w-4" />
             All Tasks
@@ -64,16 +79,15 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
           <Link
             href="/dashboard/projects"
             className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              currentPath === '/dashboard/projects' 
+              pathname === '/dashboard/projects' 
                 ? 'bg-gray-100 text-gray-900' 
                 : 'text-gray-500 hover:text-gray-900'
             }`}
-            onClick={() => setCurrentPath('/dashboard/projects')}
           >
             <FolderOpen className="h-4 w-4" />
             My Projects
             <span className="ml-auto flex h-6 w-9 items-center justify-center rounded-full bg-gray-200 text-xs">
-              3
+              {activeProjects.length}
             </span>
           </Link>
         </nav>
@@ -94,16 +108,15 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
             </button>
           </div>
           <nav className="grid items-start text-sm font-medium space-y-1">
-            {mockProjects.map((project) => (
+            {activeProjects.map((project) => (
               <Link
                 key={project.id}
                 href={`/dashboard/project/${project.id}`}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-                  currentPath === `/dashboard/project/${project.id}` 
+                  pathname === `/dashboard/project/${project.id}` 
                     ? 'bg-gray-100 text-gray-900' 
                     : 'text-gray-500 hover:text-gray-900'
                 }`}
-                onClick={() => setCurrentPath(`/dashboard/project/${project.id}`)}
               >
                 <Circle 
                   className="h-4 w-4" 
@@ -114,10 +127,13 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
                 />
                 <span className="flex-1 truncate">{project.name}</span>
                 <span className="flex h-5 w-6 items-center justify-center rounded-full bg-gray-200 text-xs">
-                  {project.taskCount}
+                  {project.totalTasks || 0}
                 </span>
               </Link>
             ))}
+            {activeProjects.length === 0 && (
+              <p className="px-3 py-2 text-sm text-gray-500">No projects yet</p>
+            )}
           </nav>
         </div>
 

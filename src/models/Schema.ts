@@ -22,6 +22,20 @@ export const usersSchema = pgTable('users', {
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 });
 
+export const projectsSchema = pgTable('projects', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => usersSchema.id),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  color: varchar('color', { length: 7 }).notNull().default('#3b82f6'), // Hex color
+  isArchived: boolean('is_archived').notNull().default(false),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+});
+
 export const counterSchema = pgTable('counter', {
   id: serial('id').primaryKey(),
   count: integer('count').default(0),
@@ -35,6 +49,7 @@ export const counterSchema = pgTable('counter', {
 export const tasksSchema = pgTable('tasks', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull().references(() => usersSchema.id),
+  projectId: integer('project_id').references(() => projectsSchema.id),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description'),
   label: varchar('label', { length: 100 }),

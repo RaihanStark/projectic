@@ -11,6 +11,7 @@ export type SubTask = {
 export type Task = {
   id: number;
   userId: number;
+  projectId: number | null;
   title: string;
   description: string | null;
   label: string | null;
@@ -20,12 +21,18 @@ export type Task = {
   createdAt: Date | string;
   updatedAt: Date | string;
   subtasks?: SubTask[];
+  project?: {
+    id: number;
+    name: string;
+    color: string;
+  } | null;
 };
 
 export type CreateTaskData = {
   title: string;
   description?: string;
   label?: string;
+  projectId?: number | null;
   status?: 'todo' | 'in-progress' | 'done' | 'cancelled';
   urgency?: 'low' | 'medium' | 'high' | 'critical';
   deadline?: string;

@@ -1,12 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Circle } from 'lucide-react';
+
+type Project = {
+  id: number;
+  name: string;
+  description: string | null;
+  color: string;
+};
 
 type NewProjectModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (project: any) => void;
+  editProject?: Project | null; // Optional project to edit
 };
 
 // Predefined color palette for projects
@@ -21,7 +29,7 @@ const projectColors = [
   { name: 'Indigo', value: '#6366f1' },
 ];
 
-const NewProjectModal = ({ isOpen, onClose, onSubmit }: NewProjectModalProps) => {
+const NewProjectModal = ({ isOpen, onClose, onSubmit, editProject }: NewProjectModalProps) => {
   const [project, setProject] = useState({
     name: '',
     description: '',
@@ -29,6 +37,25 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit }: NewProjectModalProps) =>
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Populate form when editing a project
+  useEffect(() => {
+    if (editProject) {
+      setProject({
+        name: editProject.name,
+        description: editProject.description || '',
+        color: editProject.color,
+      });
+    } else {
+      // Reset form when creating new project
+      setProject({
+        name: '',
+        description: '',
+        color: projectColors[0].value,
+      });
+    }
+    setError(null);
+  }, [editProject, isOpen]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -53,8 +80,14 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit }: NewProjectModalProps) =>
     setError(null);
 
     try {
-      const response = await fetch('/dashboard/api/projects', {
-        method: 'POST',
+      const isEditing = !!editProject;
+      const url = isEditing 
+        ? `/dashboard/api/projects/${editProject.id}`
+        : '/dashboard/api/projects';
+      const method = isEditing ? 'PATCH' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -67,22 +100,25 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit }: NewProjectModalProps) =>
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create project');
+        throw new Error(errorData.error || `Failed to ${isEditing ? 'update' : 'create'} project`);
       }
 
-      const newProject = await response.json();
-      onSubmit(newProject);
+      const resultProject = await response.json();
+      onSubmit(resultProject);
       onClose();
 
-      // Reset form
-      setProject({
-        name: '',
-        description: '',
-        color: projectColors[0].value,
-      });
+      // Reset form only if creating new project
+      if (!isEditing) {
+        setProject({
+          name: '',
+          description: '',
+          color: projectColors[0].value,
+        });
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create project. Please try again.');
-      console.error('Error creating project:', err);
+      const action = editProject ? 'update' : 'create';
+      setError(err instanceof Error ? err.message : `Failed to ${action} project. Please try again.`);
+      console.error(`Error ${action}ing project:`, err);
     } finally {
       setLoading(false);
     }
@@ -107,7 +143,7 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit }: NewProjectModalProps) =>
         </button>
 
         <h2 className="mb-6 text-2xl font-semibold text-gray-900">
-          Create New Project
+          {editProject ? 'Edit Project' : 'Create New Project'}
         </h2>
 
         {error && (
@@ -211,7 +247,10 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit }: NewProjectModalProps) =>
               className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 disabled:opacity-50"
               disabled={loading || !project.name.trim()}
             >
-              {loading ? 'Creating...' : 'Create Project'}
+              {loading 
+                ? (editProject ? 'Updating...' : 'Creating...') 
+                : (editProject ? 'Update Project' : 'Create Project')
+              }
             </button>
           </div>
         </form>

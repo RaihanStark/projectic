@@ -17,6 +17,7 @@ import { cn } from '@/utils/cn';
 import { formatDate, getStatusDisplayName, getUrgencyDisplayName, type Task } from '@/utils/taskUtils';
 import toast from 'react-hot-toast';
 import NewTaskModal from '@/components/NewTaskModal';
+import NewProjectModal from '@/components/NewProjectModal';
 import { useTaskStore } from '@/stores/taskStore';
 import { useProjectStore } from '@/stores/projectStore';
 
@@ -105,6 +106,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
   const [project, setProject] = useState<any>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { updateTask } = useTaskStore();
@@ -145,6 +147,16 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
   const handleCreateTask = async (newTask: Task) => {
     await fetchProjectAndTasks();
     toast.success('Task created successfully');
+  };
+
+  const handleEditProject = () => {
+    setShowEditProjectModal(true);
+  };
+
+  const handleUpdateProject = async (updatedProject: any) => {
+    await fetchProjectAndTasks();
+    toast.success('Project updated successfully');
+    setShowEditProjectModal(false);
   };
 
   const handleToggleTaskStatus = async (taskId: number, currentStatus: string) => {
@@ -288,6 +300,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                       type="button"
                       className="rounded-lg p-2.5 hover:bg-gray-200 transition-colors"
                       title="Edit Project"
+                      onClick={handleEditProject}
                     >
                       <Edit className="h-4 w-4 text-gray-600" />
                     </button>
@@ -509,7 +522,15 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
         isOpen={showNewTaskModal}
         onClose={() => setShowNewTaskModal(false)}
         onSubmit={handleCreateTask}
-        defaultProjectId={projectId}
+        selectedProjectId={projectId}
+      />
+
+      {/* Edit Project Modal */}
+      <NewProjectModal
+        isOpen={showEditProjectModal}
+        onClose={() => setShowEditProjectModal(false)}
+        onSubmit={handleUpdateProject}
+        editProject={project}
       />
     </div>
   );

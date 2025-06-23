@@ -17,9 +17,24 @@ import { useProjectStore } from '@/stores/projectStore';
 import toast from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
 
+type Project = {
+  id: number;
+  name: string;
+  description: string | null;
+  color: string;
+  isArchived: boolean;
+  updatedAt: Date;
+  createdAt: Date;
+  totalTasks?: number;
+  completedTasks?: number;
+  overdueTasks?: number;
+  dueTodayTasks?: number;
+};
+
 export default function ProjectsPage() {
   const { projects, setProjects, loading, error, setLoading, setError } = useProjectStore();
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [starredProjects, setStarredProjects] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -60,6 +75,22 @@ export default function ProjectsPage() {
   const handleCreateProject = async (newProject: any) => {
     await fetchProjects();
     toast.success('Project created successfully');
+  };
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setShowNewProjectModal(true);
+  };
+
+  const handleUpdateProject = async (updatedProject: any) => {
+    await fetchProjects();
+    toast.success('Project updated successfully');
+    setEditingProject(null);
+  };
+
+  const handleCloseModal = () => {
+    setShowNewProjectModal(false);
+    setEditingProject(null);
   };
 
   const handleArchiveProject = async (projectId: number) => {
@@ -226,6 +257,7 @@ export default function ProjectsPage() {
                   type="button"
                   className="rounded-md p-2 hover:bg-gray-100 transition-colors"
                   title="Edit Project"
+                  onClick={() => handleEditProject(project)}
                 >
                   <Edit className="h-4 w-4 text-gray-600" />
                 </button>
@@ -271,11 +303,12 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {/* New Project Modal */}
+      {/* New/Edit Project Modal */}
       <NewProjectModal
         isOpen={showNewProjectModal}
-        onClose={() => setShowNewProjectModal(false)}
-        onSubmit={handleCreateProject}
+        onClose={handleCloseModal}
+        onSubmit={editingProject ? handleUpdateProject : handleCreateProject}
+        editProject={editingProject}
       />
     </div>
   );

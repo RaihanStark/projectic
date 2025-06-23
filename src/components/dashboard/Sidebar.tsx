@@ -2,6 +2,7 @@
 
 import {
   Circle,
+  FileText,
   Folder,
   Home,
   Plus,
@@ -43,6 +44,13 @@ const Sidebar = ({ onNewTaskClick, taskCount = 0 }: SidebarProps) => {
             <span className="ml-auto flex h-6 w-9 items-center justify-center rounded-full bg-gray-200 text-xs">
               {taskCount}
             </span>
+          </Link>
+          <Link
+            href="/dashboard/documents"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900"
+          >
+            <FileText className="h-4 w-4" />
+            Documents
           </Link>
         </nav>
         <div className="px-4">

@@ -69,16 +69,48 @@ const mockDocuments: Document[] = [
 ];
 
 export default function DocumentsPage() {
-  const [documents] = useState<Document[]>(mockDocuments);
+  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [showPreview, setShowPreview] = useState(false);
+  const [showNewDocModal, setShowNewDocModal] = useState(false);
+  const [newDocTitle, setNewDocTitle] = useState('');
+  const [newDocEmoji, setNewDocEmoji] = useState('📄');
+  const [newDocFolder, setNewDocFolder] = useState('General');
 
   const filteredDocuments = documents.filter(doc =>
     doc.title.toLowerCase().includes(searchQuery.toLowerCase())
     || doc.content.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const commonEmojis = ['📄', '📝', '📚', '🎯', '💡', '🚀', '🗺️', '🎨', '💻', '📊', '✅', '⚡'];
+  const folders = ['General', 'Planning', 'Meetings', 'Documentation', 'Design', 'Development'];
+
+  const handleCreateDocument = () => {
+    if (!newDocTitle.trim()) {
+      return;
+    }
+
+    const newDoc: Document = {
+      id: Math.max(...documents.map(d => d.id), 0) + 1,
+      title: newDocTitle,
+      emoji: newDocEmoji,
+      content: `# ${newDocTitle}\n\n`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      folder: newDocFolder,
+    };
+
+    setDocuments([newDoc, ...documents]);
+    setShowNewDocModal(false);
+    setNewDocTitle('');
+    setNewDocEmoji('📄');
+    setNewDocFolder('General');
+    
+    // Navigate to the new document editor
+    window.location.href = `/dashboard/documents/${newDoc.id}`;
+  };
 
   const formatDate = (date: Date) => {
     const now = new Date();
@@ -175,6 +207,7 @@ export default function DocumentsPage() {
             </div>
             <button
               type="button"
+              onClick={() => setShowNewDocModal(true)}
               className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600"
             >
               <Plus className="h-4 w-4" />
@@ -238,6 +271,7 @@ export default function DocumentsPage() {
                   {!searchQuery && (
                     <button
                       type="button"
+                      onClick={() => setShowNewDocModal(true)}
                       className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600"
                     >
                       <Plus className="h-4 w-4" />
@@ -352,6 +386,107 @@ export default function DocumentsPage() {
           </div>
         )}
       </div>
+
+      {/* New Document Modal */}
+      {showNewDocModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setShowNewDocModal(false)}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-6 text-xl font-semibold text-gray-900">Create New Document</h2>
+            
+            {/* Emoji Picker */}
+            <div className="mb-6">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Choose an icon
+              </label>
+              <div className="grid grid-cols-6 gap-2">
+                {commonEmojis.map(emoji => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setNewDocEmoji(emoji)}
+                    className={cn(
+                      "rounded-lg p-3 text-2xl transition-all hover:scale-110",
+                      newDocEmoji === emoji 
+                        ? "bg-blue-100 ring-2 ring-blue-500" 
+                        : "hover:bg-gray-100"
+                    )}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Title Input */}
+            <div className="mb-6">
+              <label htmlFor="doc-title" className="mb-2 block text-sm font-medium text-gray-700">
+                Document Title
+              </label>
+              <input
+                id="doc-title"
+                type="text"
+                value={newDocTitle}
+                onChange={(e) => setNewDocTitle(e.target.value)}
+                placeholder="Enter document title..."
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                autoFocus
+              />
+            </div>
+
+            {/* Folder Selection */}
+            <div className="mb-6">
+              <label htmlFor="doc-folder" className="mb-2 block text-sm font-medium text-gray-700">
+                Folder
+              </label>
+              <select
+                id="doc-folder"
+                value={newDocFolder}
+                onChange={(e) => setNewDocFolder(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {folders.map(folder => (
+                  <option key={folder} value={folder}>
+                    {folder}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNewDocModal(false);
+                  setNewDocTitle('');
+                  setNewDocEmoji('📄');
+                  setNewDocFolder('General');
+                }}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateDocument}
+                disabled={!newDocTitle.trim()}
+                className={cn(
+                  "rounded-lg px-4 py-2 text-sm font-medium text-white",
+                  newDocTitle.trim()
+                    ? "bg-blue-500 hover:bg-blue-600"
+                    : "bg-gray-300 cursor-not-allowed"
+                )}
+              >
+                Create Document
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

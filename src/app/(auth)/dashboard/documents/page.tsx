@@ -4,8 +4,6 @@ import type { Document } from '@/stores/documentStore';
 import {
   ArrowLeft,
   Clock,
-  Copy,
-  Download,
   FileText,
   FolderOpen,
   MoreVertical,
@@ -29,6 +27,7 @@ export default function DocumentsPage() {
     error,
     setDocuments,
     addDocument,
+    deleteDocument,
     setLoading,
     setError,
   } = useDocumentStore();
@@ -121,6 +120,36 @@ export default function DocumentsPage() {
     } catch (error) {
       console.error('Error creating document:', error);
       toast.error('Failed to create document');
+    }
+  };
+
+  const handleDeleteDocument = async (documentId: number) => {
+    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/dashboard/api/documents/${documentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete document');
+      }
+
+      // Update the store
+      deleteDocument(documentId);
+      
+      // Close preview if the deleted document was selected
+      if (selectedDoc?.id === documentId) {
+        setSelectedDoc(null);
+        setShowPreview(false);
+      }
+      
+      toast.success('Document deleted successfully');
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document');
     }
   };
 
@@ -341,30 +370,17 @@ export default function DocumentsPage() {
                 <button
                   type="button"
                   className="rounded p-2 hover:bg-gray-100"
-                  title="Duplicate"
-                >
-                  <Copy className="h-4 w-4 text-gray-600" />
-                </button>
-                <button
-                  type="button"
-                  className="rounded p-2 hover:bg-gray-100"
-                  title="Download"
-                >
-                  <Download className="h-4 w-4 text-gray-600" />
-                </button>
-                <button
-                  type="button"
-                  className="rounded p-2 hover:bg-gray-100"
                   title="Share"
                 >
                   <Share2 className="h-4 w-4 text-gray-600" />
                 </button>
                 <button
                   type="button"
-                  className="rounded p-2 hover:bg-gray-100"
+                  onClick={() => handleDeleteDocument(selectedDoc.id)}
+                  className="rounded p-2 hover:bg-gray-100 hover:bg-red-50"
                   title="Delete"
                 >
-                  <Trash2 className="h-4 w-4 text-gray-600" />
+                  <Trash2 className="h-4 w-4 text-gray-600 hover:text-red-600" />
                 </button>
                 <button
                   type="button"

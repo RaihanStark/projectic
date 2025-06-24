@@ -66,3 +66,19 @@ export const waitlistSchema = pgTable('waitlist', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 });
+
+export const documentsSchema = pgTable('documents', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => usersSchema.id),
+  title: varchar('title', { length: 255 }).notNull(),
+  emoji: varchar('emoji', { length: 10 }).default('📄'),
+  content: text('content').default(''),
+  folder: varchar('folder', { length: 100 }).default('General'),
+  shareId: varchar('share_id', { length: 36 }).unique(), // UUID for sharing
+  isPublic: boolean('is_public').default(false),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+});

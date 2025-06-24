@@ -1,5 +1,6 @@
 'use client';
 
+import type { Document } from '@/stores/documentStore';
 import {
   ArrowLeft,
   Clock,
@@ -14,72 +15,24 @@ import {
   Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import MarkdownEditor from '@/components/MarkdownEditor';
+import { useDocumentStore } from '@/stores/documentStore';
 import { cn } from '@/utils/cn';
 
-type Document = {
-  id: number;
-  title: string;
-  emoji?: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-  folder?: string;
-  shareId?: string;
-  isPublic?: boolean;
-};
-
-// Mock data for UI demonstration
-const mockDocuments: Document[] = [
-  {
-    id: 1,
-    title: 'Project Roadmap',
-    emoji: '🗺️',
-    content: '# Project Roadmap\n\n## Q1 Goals\n- Launch MVP\n- User feedback integration\n\n## Q2 Goals\n- Scale to 1000 users\n- Add premium features',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-20'),
-    folder: 'Planning',
-    shareId: '550e8400-e29b-41d4-a716-446655440001',
-    isPublic: true,
-  },
-  {
-    id: 2,
-    title: 'Meeting Notes - Jan 22',
-    emoji: '📝',
-    content: '# Meeting Notes\n\n**Date:** January 22, 2024\n**Attendees:** Team leads\n\n## Action Items\n- [ ] Review design mockups\n- [ ] Update API documentation',
-    createdAt: new Date('2024-01-22'),
-    updatedAt: new Date('2024-01-22'),
-    folder: 'Meetings',
-    shareId: '550e8400-e29b-41d4-a716-446655440002',
-    isPublic: false,
-  },
-  {
-    id: 3,
-    title: 'API Documentation',
-    emoji: '📚',
-    content: '# API Documentation\n\n## Authentication\n```json\n{\n  "token": "Bearer xxx"\n}\n```\n\n## Endpoints\n- GET /api/users\n- POST /api/tasks',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-18'),
-    folder: 'Documentation',
-    shareId: '550e8400-e29b-41d4-a716-446655440003',
-    isPublic: true,
-  },
-  {
-    id: 4,
-    title: 'Design System Guidelines',
-    emoji: '🎨',
-    content: '# Design System\n\n## Colors\n- Primary: #3B82F6\n- Secondary: #10B981\n\n## Typography\n- Headings: Inter\n- Body: System UI',
-    createdAt: new Date('2024-01-05'),
-    updatedAt: new Date('2024-01-05'),
-    folder: 'Design',
-    shareId: '550e8400-e29b-41d4-a716-446655440004',
-    isPublic: true,
-  },
-];
-
 export default function DocumentsPage() {
-  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
+  // Zustand store
+  const {
+    documents,
+    loading,
+    error,
+    setDocuments,
+    addDocument,
+    setLoading,
+    setError,
+  } = useDocumentStore();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -89,9 +42,9 @@ export default function DocumentsPage() {
   const [newDocEmoji, setNewDocEmoji] = useState('📄');
   const [newDocFolder, setNewDocFolder] = useState('General');
 
-  const filteredDocuments = documents.filter(doc =>
+  const filteredDocuments = (documents || []).filter(doc =>
     doc.title.toLowerCase().includes(searchQuery.toLowerCase())
-    || doc.content.toLowerCase().includes(searchQuery.toLowerCase()),
+    || (doc.content || '').toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const commonEmojis = ['📄', '📝', '📚', '🎯', '💡', '🚀', '🗺️', '🎨', '💻', '📊', '✅', '⚡'];
@@ -99,41 +52,80 @@ export default function DocumentsPage() {
 
   // Generate UUID v4
   const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
       const r = Math.random() * 16 | 0;
       const v = c === 'x' ? r : (r & 0x3 | 0x8);
       return v.toString(16);
     });
   };
 
-  const handleCreateDocument = () => {
+  // Fetch documents from API
+  const fetchDocuments = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/dashboard/api/documents');
+      if (!response.ok) {
+        throw new Error('Failed to fetch documents');
+      }
+      const documents = await response.json();
+      setDocuments(documents);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      setError('Failed to load documents');
+      toast.error('Failed to load documents');
+    } finally {
+      setLoading(false);
+    }
+  }, [setLoading, setDocuments, setError]);
+
+  // Load documents on mount
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
+
+  const handleCreateDocument = async () => {
     if (!newDocTitle.trim()) {
       return;
     }
 
-    const newDoc: Document = {
-      id: Math.max(...documents.map(d => d.id), 0) + 1,
-      title: newDocTitle,
-      emoji: newDocEmoji,
-      content: `# ${newDocTitle}\n\n`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      folder: newDocFolder,
-      shareId: generateUUID(),
-      isPublic: false,
-    };
+    try {
+      const response = await fetch('/dashboard/api/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newDocTitle,
+          emoji: newDocEmoji,
+          content: `# ${newDocTitle}\n\n`,
+          folder: newDocFolder,
+        }),
+      });
 
-    setDocuments([newDoc, ...documents]);
-    setShowNewDocModal(false);
-    setNewDocTitle('');
-    setNewDocEmoji('📄');
-    setNewDocFolder('General');
-    
-    // Navigate to the new document editor
-    window.location.href = `/dashboard/documents/${newDoc.id}`;
+      if (!response.ok) {
+        throw new Error('Failed to create document');
+      }
+
+      const newDoc = await response.json();
+
+      addDocument(newDoc);
+      setShowNewDocModal(false);
+      setNewDocTitle('');
+      setNewDocEmoji('📄');
+      setNewDocFolder('General');
+
+      toast.success('Document created successfully');
+
+      // Navigate to the new document editor
+      window.location.href = `/dashboard/documents/${newDoc.id}`;
+    } catch (error) {
+      console.error('Error creating document:', error);
+      toast.error('Failed to create document');
+    }
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (dateInput: Date | string) => {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -281,38 +273,45 @@ export default function DocumentsPage() {
 
         {/* Documents List/Grid */}
         <div className="py-6">
-          {filteredDocuments.length === 0
+          {loading
             ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <FileText className="mb-4 h-12 w-12 text-gray-300" />
-                  <h3 className="mb-2 text-lg font-medium text-gray-900">No documents found</h3>
-                  <p className="mb-4 text-sm text-gray-500">
-                    {searchQuery ? 'Try adjusting your search' : 'Create your first document to get started'}
-                  </p>
-                  {!searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setShowNewDocModal(true)}
-                      className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create Document
-                    </button>
-                  )}
+                  <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500" />
+                  <p className="text-gray-600">Loading documents...</p>
                 </div>
               )
-            : (
-                <div className={cn(
-                  viewMode === 'grid'
-                    ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'
-                    : 'space-y-4',
+            : filteredDocuments.length === 0
+              ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <FileText className="mb-4 h-12 w-12 text-gray-300" />
+                    <h3 className="mb-2 text-lg font-medium text-gray-900">No documents found</h3>
+                    <p className="mb-4 text-sm text-gray-500">
+                      {searchQuery ? 'Try adjusting your search' : 'Create your first document to get started'}
+                    </p>
+                    {!searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setShowNewDocModal(true)}
+                        className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Create Document
+                      </button>
+                    )}
+                  </div>
+                )
+              : (
+                  <div className={cn(
+                    viewMode === 'grid'
+                      ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'
+                      : 'space-y-4',
+                  )}
+                  >
+                    {filteredDocuments.map(doc => (
+                      <DocumentCard key={doc.id} doc={doc} />
+                    ))}
+                  </div>
                 )}
-                >
-                  {filteredDocuments.map(doc => (
-                    <DocumentCard key={doc.id} doc={doc} />
-                  ))}
-                </div>
-              )}
         </div>
       </div>
 
@@ -411,13 +410,13 @@ export default function DocumentsPage() {
       {/* New Document Modal */}
       {showNewDocModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             className="fixed inset-0 bg-black/50"
             onClick={() => setShowNewDocModal(false)}
           />
           <div className="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
             <h2 className="mb-6 text-xl font-semibold text-gray-900">Create New Document</h2>
-            
+
             {/* Emoji Picker */}
             <div className="mb-6">
               <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -430,10 +429,10 @@ export default function DocumentsPage() {
                     type="button"
                     onClick={() => setNewDocEmoji(emoji)}
                     className={cn(
-                      "rounded-lg p-3 text-2xl transition-all hover:scale-110",
-                      newDocEmoji === emoji 
-                        ? "bg-blue-100 ring-2 ring-blue-500" 
-                        : "hover:bg-gray-100"
+                      'rounded-lg p-3 text-2xl transition-all hover:scale-110',
+                      newDocEmoji === emoji
+                        ? 'bg-blue-100 ring-2 ring-blue-500'
+                        : 'hover:bg-gray-100',
                     )}
                   >
                     {emoji}
@@ -451,7 +450,7 @@ export default function DocumentsPage() {
                 id="doc-title"
                 type="text"
                 value={newDocTitle}
-                onChange={(e) => setNewDocTitle(e.target.value)}
+                onChange={e => setNewDocTitle(e.target.value)}
                 placeholder="Enter document title..."
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 autoFocus
@@ -466,7 +465,7 @@ export default function DocumentsPage() {
               <select
                 id="doc-folder"
                 value={newDocFolder}
-                onChange={(e) => setNewDocFolder(e.target.value)}
+                onChange={e => setNewDocFolder(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {folders.map(folder => (
@@ -496,10 +495,10 @@ export default function DocumentsPage() {
                 onClick={handleCreateDocument}
                 disabled={!newDocTitle.trim()}
                 className={cn(
-                  "rounded-lg px-4 py-2 text-sm font-medium text-white",
+                  'rounded-lg px-4 py-2 text-sm font-medium text-white',
                   newDocTitle.trim()
-                    ? "bg-blue-500 hover:bg-blue-600"
-                    : "bg-gray-300 cursor-not-allowed"
+                    ? 'bg-blue-500 hover:bg-blue-600'
+                    : 'bg-gray-300 cursor-not-allowed',
                 )}
               >
                 Create Document

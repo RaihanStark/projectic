@@ -20,94 +20,88 @@ import Link from 'next/link';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import { cn } from '@/utils/cn';
 import toast from 'react-hot-toast';
+import { useDocumentStore } from '@/stores/documentStore';
+import type { Document } from '@/stores/documentStore';
 
-// Mock data - same structure as documents list
-const mockDocuments = [
-  {
-    id: 1,
-    title: 'Project Roadmap',
-    emoji: '🗺️',
-    content: '# Project Roadmap\n\n## Q1 Goals\n- Launch MVP\n- User feedback integration\n\n## Q2 Goals\n- Scale to 1000 users\n- Add premium features',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-20'),
-    folder: 'Planning',
-    shareId: '550e8400-e29b-41d4-a716-446655440001',
-    isPublic: true,
-  },
-  {
-    id: 2,
-    title: 'Meeting Notes - Jan 22',
-    emoji: '📝',
-    content: '# Meeting Notes\n\n**Date:** January 22, 2024\n**Attendees:** Team leads\n\n## Action Items\n- [ ] Review design mockups\n- [ ] Update API documentation',
-    createdAt: new Date('2024-01-22'),
-    updatedAt: new Date('2024-01-22'),
-    folder: 'Meetings',
-    shareId: '550e8400-e29b-41d4-a716-446655440002',
-    isPublic: false,
-  },
-  {
-    id: 3,
-    title: 'API Documentation',
-    emoji: '📚',
-    content: '# API Documentation\n\n## Authentication\n```json\n{\n  "token": "Bearer xxx"\n}\n```\n\n## Endpoints\n- GET /api/users\n- POST /api/tasks',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-18'),
-    folder: 'Documentation',
-    shareId: '550e8400-e29b-41d4-a716-446655440003',
-    isPublic: true,
-  },
-  {
-    id: 4,
-    title: 'Design System Guidelines',
-    emoji: '🎨',
-    content: '# Design System\n\n## Colors\n- Primary: #3B82F6\n- Secondary: #10B981\n\n## Typography\n- Headings: Inter\n- Body: System UI',
-    createdAt: new Date('2024-01-05'),
-    updatedAt: new Date('2024-01-05'),
-    folder: 'Design',
-    shareId: '550e8400-e29b-41d4-a716-446655440004',
-    isPublic: true,
-  },
-];
 
 export default function DocumentEditorPage() {
   const params = useParams();
   const router = useRouter();
   const documentId = Number(params.id);
   
-  // Find the document from mock data
-  const initialDocument = mockDocuments.find(doc => doc.id === documentId) || {
-    id: documentId,
-    title: 'Untitled Document',
-    emoji: '📄',
-    content: '',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    folder: 'General',
-    shareId: crypto.randomUUID(),
-    isPublic: false,
-  };
-
-  const [document, setDocument] = useState(initialDocument);
+  // Zustand store
+  const {
+    getDocumentById,
+    updateDocument: updateDocumentInStore,
+    deleteDocument: deleteDocumentFromStore,
+    setLoading: setStoreLoading,
+    setError: setStoreError,
+  } = useDocumentStore();
+  
+  const [document, setDocument] = useState<Document | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date>(document.updatedAt);
+  const [lastSaved, setLastSaved] = useState<Date>(new Date());
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [isPublic, setIsPublic] = useState(initialDocument.isPublic || false);
+  const [isPublic, setIsPublic] = useState(false);
   const [shareLink, setShareLink] = useState('');
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Common emojis for quick selection
   const commonEmojis = ['📄', '📝', '📚', '🎯', '💡', '🚀', '🗺️', '🎨', '💻', '📊', '✅', '⚡'];
 
-  // Generate share link
+  // Fetch document from store or API
   useEffect(() => {
-    if (typeof window !== 'undefined' && document.shareId) {
-      const baseUrl = window.location.origin;
-      setShareLink(`${baseUrl}/share/${document.shareId}`);
-    }
-  }, [document.shareId]);
+    const fetchDocument = async () => {
+      try {
+        setLoading(true);
+        
+        // Try to get from store first
+        const storeDoc = getDocumentById(documentId);
+        if (storeDoc) {
+          setDocument(storeDoc);
+          setIsPublic(storeDoc.isPublic || false);
+          setLastSaved(new Date(storeDoc.updatedAt));
+          
+          // Generate share link
+          if (typeof window !== 'undefined' && storeDoc.shareId) {
+            const baseUrl = window.location.origin;
+            setShareLink(`${baseUrl}/share/${storeDoc.shareId}`);
+          }
+          setLoading(false);
+          return;
+        }
+        
+        // If not in store, fetch from API
+        const response = await fetch(`/dashboard/api/documents/${documentId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch document');
+        }
+        const doc = await response.json();
+        
+        setDocument(doc);
+        setIsPublic(doc.isPublic || false);
+        setLastSaved(new Date(doc.updatedAt));
+        
+        // Generate share link
+        if (typeof window !== 'undefined' && doc.shareId) {
+          const baseUrl = window.location.origin;
+          setShareLink(`${baseUrl}/share/${doc.shareId}`);
+        }
+      } catch (error) {
+        console.error('Error fetching document:', error);
+        toast.error('Failed to load document');
+        router.push('/dashboard/documents');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDocument();
+  }, [documentId, router, getDocumentById]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -151,23 +145,69 @@ export default function DocumentEditorPage() {
   };
 
   const handleSave = async () => {
+    if (!document || !hasUnsavedChanges) return;
+    
     setIsSaving(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    setDocument(prev => ({ ...prev, updatedAt: new Date() }));
-    setLastSaved(new Date());
-    setHasUnsavedChanges(false);
-    setIsSaving(false);
-    
-    toast.success('Document saved');
+    try {
+      const response = await fetch(`/dashboard/api/documents/${documentId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: document.title,
+          emoji: document.emoji,
+          content: document.content,
+          folder: document.folder,
+          isPublic: isPublic,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save document');
+      }
+
+      const updatedDoc = await response.json();
+      
+      setDocument(updatedDoc);
+      setLastSaved(new Date(updatedDoc.updatedAt));
+      setHasUnsavedChanges(false);
+      
+      // Update the store
+      updateDocumentInStore(documentId, updatedDoc);
+      
+      toast.success('Document saved');
+    } catch (error) {
+      console.error('Error saving document:', error);
+      toast.error('Failed to save document');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this document?')) {
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this document?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/dashboard/api/documents/${documentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete document');
+      }
+
+      // Update the store
+      deleteDocumentFromStore(documentId);
+      
       toast.success('Document deleted');
       router.push('/dashboard/documents');
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document');
     }
   };
 
@@ -203,6 +243,34 @@ export default function DocumentEditorPage() {
     
     return date.toLocaleDateString();
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500 mx-auto" />
+          <p className="text-gray-600">Loading document...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!document) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <FileText className="mb-4 h-12 w-12 text-gray-300 mx-auto" />
+          <h1 className="mb-2 text-xl font-semibold text-gray-900">Document not found</h1>
+          <Link
+            href="/dashboard/documents"
+            className="text-blue-600 hover:text-blue-700 text-sm"
+          >
+            Back to Documents
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -352,7 +420,7 @@ export default function DocumentEditorPage() {
                   {document.folder}
                 </span>
                 <span>•</span>
-                <span>Created {document.createdAt.toLocaleDateString()}</span>
+                <span>Created {new Date(document.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
           </div>

@@ -162,7 +162,7 @@ export default function DocumentsPage() {
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-6 py-4">
+        <div className="sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
@@ -170,7 +170,6 @@ export default function DocumentsPage() {
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back to Tasks
               </Link>
               <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
             </div>
@@ -227,7 +226,7 @@ export default function DocumentsPage() {
         </div>
 
         {/* Documents List/Grid */}
-        <div className="p-6">
+        <div className="py-6">
           {filteredDocuments.length === 0
             ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">

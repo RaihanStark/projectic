@@ -31,6 +31,8 @@ const mockDocuments = [
     createdAt: new Date('2024-01-15'),
     updatedAt: new Date('2024-01-20'),
     folder: 'Planning',
+    shareId: '550e8400-e29b-41d4-a716-446655440001',
+    isPublic: true,
   },
   {
     id: 2,
@@ -40,6 +42,8 @@ const mockDocuments = [
     createdAt: new Date('2024-01-22'),
     updatedAt: new Date('2024-01-22'),
     folder: 'Meetings',
+    shareId: '550e8400-e29b-41d4-a716-446655440002',
+    isPublic: false,
   },
   {
     id: 3,
@@ -49,6 +53,8 @@ const mockDocuments = [
     createdAt: new Date('2024-01-10'),
     updatedAt: new Date('2024-01-18'),
     folder: 'Documentation',
+    shareId: '550e8400-e29b-41d4-a716-446655440003',
+    isPublic: true,
   },
   {
     id: 4,
@@ -58,6 +64,8 @@ const mockDocuments = [
     createdAt: new Date('2024-01-05'),
     updatedAt: new Date('2024-01-05'),
     folder: 'Design',
+    shareId: '550e8400-e29b-41d4-a716-446655440004',
+    isPublic: true,
   },
 ];
 
@@ -75,6 +83,8 @@ export default function DocumentEditorPage() {
     createdAt: new Date(),
     updatedAt: new Date(),
     folder: 'General',
+    shareId: crypto.randomUUID(),
+    isPublic: false,
   };
 
   const [document, setDocument] = useState(initialDocument);
@@ -84,7 +94,7 @@ export default function DocumentEditorPage() {
   const [lastSaved, setLastSaved] = useState<Date>(document.updatedAt);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [isPublic, setIsPublic] = useState(false);
+  const [isPublic, setIsPublic] = useState(initialDocument.isPublic || false);
   const [shareLink, setShareLink] = useState('');
   const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,11 +103,11 @@ export default function DocumentEditorPage() {
 
   // Generate share link
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && document.shareId) {
       const baseUrl = window.location.origin;
-      setShareLink(`${baseUrl}/share/${documentId}`);
+      setShareLink(`${baseUrl}/share/${document.shareId}`);
     }
-  }, [documentId]);
+  }, [document.shareId]);
 
   // Auto-save functionality
   useEffect(() => {

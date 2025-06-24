@@ -24,6 +24,7 @@ const mockDocuments = [
     createdAt: new Date('2024-01-15'),
     updatedAt: new Date('2024-01-20'),
     folder: 'Planning',
+    shareId: '550e8400-e29b-41d4-a716-446655440001',
     isPublic: true,
   },
   {
@@ -34,6 +35,7 @@ const mockDocuments = [
     createdAt: new Date('2024-01-22'),
     updatedAt: new Date('2024-01-22'),
     folder: 'Meetings',
+    shareId: '550e8400-e29b-41d4-a716-446655440002',
     isPublic: false,
   },
   {
@@ -44,6 +46,7 @@ const mockDocuments = [
     createdAt: new Date('2024-01-10'),
     updatedAt: new Date('2024-01-18'),
     folder: 'Documentation',
+    shareId: '550e8400-e29b-41d4-a716-446655440003',
     isPublic: true,
   },
   {
@@ -54,26 +57,27 @@ const mockDocuments = [
     createdAt: new Date('2024-01-05'),
     updatedAt: new Date('2024-01-05'),
     folder: 'Design',
+    shareId: '550e8400-e29b-41d4-a716-446655440004',
     isPublic: true,
   },
 ];
 
 export default function ShareDocumentPage() {
   const params = useParams();
-  const documentId = Number(params.id);
+  const shareId = params.id as string;
   const [document, setDocument] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call to fetch document
+    // Simulate API call to fetch document by shareId
     const fetchDocument = async () => {
       setLoading(true);
       
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const doc = mockDocuments.find(d => d.id === documentId);
+      const doc = mockDocuments.find(d => d.shareId === shareId);
       
       if (!doc) {
         setError('Document not found');
@@ -87,7 +91,7 @@ export default function ShareDocumentPage() {
     };
 
     fetchDocument();
-  }, [documentId]);
+  }, [shareId]);
 
   if (loading) {
     return (
@@ -193,7 +197,7 @@ export default function ShareDocumentPage() {
                 </Link>
               </span>
               <span>
-                Document ID: #{document.id}
+                Share ID: {document.shareId?.substring(0, 8)}...
               </span>
             </div>
           </div>

@@ -26,6 +26,8 @@ type Document = {
   createdAt: Date;
   updatedAt: Date;
   folder?: string;
+  shareId?: string;
+  isPublic?: boolean;
 };
 
 // Mock data for UI demonstration
@@ -38,6 +40,8 @@ const mockDocuments: Document[] = [
     createdAt: new Date('2024-01-15'),
     updatedAt: new Date('2024-01-20'),
     folder: 'Planning',
+    shareId: '550e8400-e29b-41d4-a716-446655440001',
+    isPublic: true,
   },
   {
     id: 2,
@@ -47,6 +51,8 @@ const mockDocuments: Document[] = [
     createdAt: new Date('2024-01-22'),
     updatedAt: new Date('2024-01-22'),
     folder: 'Meetings',
+    shareId: '550e8400-e29b-41d4-a716-446655440002',
+    isPublic: false,
   },
   {
     id: 3,
@@ -56,6 +62,8 @@ const mockDocuments: Document[] = [
     createdAt: new Date('2024-01-10'),
     updatedAt: new Date('2024-01-18'),
     folder: 'Documentation',
+    shareId: '550e8400-e29b-41d4-a716-446655440003',
+    isPublic: true,
   },
   {
     id: 4,
@@ -65,6 +73,8 @@ const mockDocuments: Document[] = [
     createdAt: new Date('2024-01-05'),
     updatedAt: new Date('2024-01-05'),
     folder: 'Design',
+    shareId: '550e8400-e29b-41d4-a716-446655440004',
+    isPublic: true,
   },
 ];
 
@@ -87,6 +97,15 @@ export default function DocumentsPage() {
   const commonEmojis = ['📄', '📝', '📚', '🎯', '💡', '🚀', '🗺️', '🎨', '💻', '📊', '✅', '⚡'];
   const folders = ['General', 'Planning', 'Meetings', 'Documentation', 'Design', 'Development'];
 
+  // Generate UUID v4
+  const generateUUID = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
   const handleCreateDocument = () => {
     if (!newDocTitle.trim()) {
       return;
@@ -100,6 +119,8 @@ export default function DocumentsPage() {
       createdAt: new Date(),
       updatedAt: new Date(),
       folder: newDocFolder,
+      shareId: generateUUID(),
+      isPublic: false,
     };
 
     setDocuments([newDoc, ...documents]);

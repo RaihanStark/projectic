@@ -6,6 +6,8 @@ import {
   Clock,
   FileText,
   FolderOpen,
+  Globe,
+  Link as LinkIcon,
   MoreVertical,
   Plus,
   Search,
@@ -40,6 +42,8 @@ export default function DocumentsPage() {
   const [newDocTitle, setNewDocTitle] = useState('');
   const [newDocEmoji, setNewDocEmoji] = useState('📄');
   const [newDocFolder, setNewDocFolder] = useState('General');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLink, setShareLink] = useState('');
 
   const filteredDocuments = (documents || []).filter(doc =>
     doc.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -150,6 +154,109 @@ export default function DocumentsPage() {
     } catch (error) {
       console.error('Error deleting document:', error);
       toast.error('Failed to delete document');
+    }
+  };
+
+  const handleShareDocument = async (doc: Document) => {
+    setSelectedDoc(doc);
+    
+    // Generate share link if document doesn't have shareId
+    if (!doc.shareId) {
+      try {
+        const response = await fetch(`/dashboard/api/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: doc.title,
+            emoji: doc.emoji,
+            content: doc.content,
+            folder: doc.folder,
+            isPublic: true, // Make it public when sharing
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate share link');
+        }
+
+        const updatedDoc = await response.json();
+        
+        // Update the document in store and local state
+        const updatedDocuments = documents.map(d => 
+          d.id === doc.id ? updatedDoc : d
+        );
+        setDocuments(updatedDocuments);
+        setSelectedDoc(updatedDoc);
+        
+        // Generate share link
+        if (typeof window !== 'undefined' && updatedDoc.shareId) {
+          const baseUrl = window.location.origin;
+          setShareLink(`${baseUrl}/share/${updatedDoc.shareId}`);
+        }
+      } catch (error) {
+        console.error('Error generating share link:', error);
+        toast.error('Failed to generate share link');
+        return;
+      }
+    } else {
+      // Generate share link for existing shareId
+      if (typeof window !== 'undefined') {
+        const baseUrl = window.location.origin;
+        setShareLink(`${baseUrl}/share/${doc.shareId}`);
+      }
+    }
+    
+    setShowShareModal(true);
+  };
+
+  const handleTogglePublic = async () => {
+    if (!selectedDoc) return;
+    
+    try {
+      const newIsPublic = !selectedDoc.isPublic;
+      
+      const response = await fetch(`/dashboard/api/documents/${selectedDoc.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: selectedDoc.title,
+          emoji: selectedDoc.emoji,
+          content: selectedDoc.content,
+          folder: selectedDoc.folder,
+          isPublic: newIsPublic,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update document visibility');
+      }
+
+      const updatedDoc = await response.json();
+      
+      // Update the document in store and local state
+      const updatedDocuments = documents.map(d => 
+        d.id === selectedDoc.id ? updatedDoc : d
+      );
+      setDocuments(updatedDocuments);
+      setSelectedDoc(updatedDoc);
+      
+      toast.success(newIsPublic ? 'Document is now public' : 'Document is now private');
+    } catch (error) {
+      console.error('Error updating document visibility:', error);
+      toast.error('Failed to update document visibility');
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      toast.success('Share link copied to clipboard');
+    } catch (err) {
+      toast.error('Failed to copy link');
     }
   };
 
@@ -369,6 +476,7 @@ export default function DocumentsPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
+                  onClick={() => handleShareDocument(selectedDoc)}
                   className="rounded p-2 hover:bg-gray-100"
                   title="Share"
                 >
@@ -422,6 +530,95 @@ export default function DocumentsPage() {
           </div>
         )}
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && selectedDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setShowShareModal(false)}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-6 text-xl font-semibold text-gray-900">Share Document</h2>
+            
+            {/* Public Access Toggle */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Globe className="h-5 w-5 text-gray-600" />
+                  <div>
+                    <p className="font-medium text-gray-900">Public Access</p>
+                    <p className="text-sm text-gray-500">Anyone with the link can view</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleTogglePublic}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                    selectedDoc.isPublic ? "bg-blue-500" : "bg-gray-200"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                      selectedDoc.isPublic ? "translate-x-6" : "translate-x-1"
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Share Link */}
+            {selectedDoc.isPublic && shareLink && (
+              <div className="mb-6">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Share Link
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={shareLink}
+                    readOnly
+                    className="flex-1 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    Copy
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  Anyone with this link can view the document
+                </p>
+              </div>
+            )}
+
+            {/* Warning for Private Documents */}
+            {!selectedDoc.isPublic && (
+              <div className="mb-6 rounded-lg bg-gray-50 p-4">
+                <p className="text-sm text-gray-600">
+                  This document is currently private. Enable public access to generate a shareable link.
+                </p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowShareModal(false)}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New Document Modal */}
       {showNewDocModal && (

@@ -14,80 +14,54 @@ import Link from 'next/link';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import { cn } from '@/utils/cn';
 
-// Mock data - same as in documents
-const mockDocuments = [
-  {
-    id: 1,
-    title: 'Project Roadmap',
-    emoji: '🗺️',
-    content: '# Project Roadmap\n\n## Q1 Goals\n- Launch MVP\n- User feedback integration\n\n## Q2 Goals\n- Scale to 1000 users\n- Add premium features',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-20'),
-    folder: 'Planning',
-    shareId: '550e8400-e29b-41d4-a716-446655440001',
-    isPublic: true,
-  },
-  {
-    id: 2,
-    title: 'Meeting Notes - Jan 22',
-    emoji: '📝',
-    content: '# Meeting Notes\n\n**Date:** January 22, 2024\n**Attendees:** Team leads\n\n## Action Items\n- [ ] Review design mockups\n- [ ] Update API documentation',
-    createdAt: new Date('2024-01-22'),
-    updatedAt: new Date('2024-01-22'),
-    folder: 'Meetings',
-    shareId: '550e8400-e29b-41d4-a716-446655440002',
-    isPublic: false,
-  },
-  {
-    id: 3,
-    title: 'API Documentation',
-    emoji: '📚',
-    content: '# API Documentation\n\n## Authentication\n```json\n{\n  "token": "Bearer xxx"\n}\n```\n\n## Endpoints\n- GET /api/users\n- POST /api/tasks',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-18'),
-    folder: 'Documentation',
-    shareId: '550e8400-e29b-41d4-a716-446655440003',
-    isPublic: true,
-  },
-  {
-    id: 4,
-    title: 'Design System Guidelines',
-    emoji: '🎨',
-    content: '# Design System\n\n## Colors\n- Primary: #3B82F6\n- Secondary: #10B981\n\n## Typography\n- Headings: Inter\n- Body: System UI',
-    createdAt: new Date('2024-01-05'),
-    updatedAt: new Date('2024-01-05'),
-    folder: 'Design',
-    shareId: '550e8400-e29b-41d4-a716-446655440004',
-    isPublic: true,
-  },
-];
+interface Document {
+  id: number;
+  title: string;
+  emoji?: string;
+  content: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  folder?: string;
+  shareId?: string;
+  isPublic?: boolean;
+}
 
 export default function ShareDocumentPage() {
   const params = useParams();
   const shareId = params.id as string;
-  const [document, setDocument] = useState<any>(null);
+  const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call to fetch document by shareId
     const fetchDocument = async () => {
-      setLoading(true);
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const doc = mockDocuments.find(d => d.shareId === shareId);
-      
-      if (!doc) {
-        setError('Document not found');
-      } else if (!doc.isPublic) {
-        setError('This document is not publicly shared');
-      } else {
+      try {
+        setLoading(true);
+        
+        const response = await fetch(`/api/share/${shareId}`);
+        
+        if (response.status === 404) {
+          setError('Document not found');
+          return;
+        }
+        
+        if (response.status === 403) {
+          setError('This document is not publicly shared');
+          return;
+        }
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch document');
+        }
+        
+        const doc = await response.json();
         setDocument(doc);
+      } catch (error) {
+        console.error('Error fetching document:', error);
+        setError('Failed to load document');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     fetchDocument();
@@ -170,7 +144,7 @@ export default function ShareDocumentPage() {
                   <span>•</span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    Last updated {document.updatedAt.toLocaleDateString()}
+                    Last updated {new Date(document.updatedAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>

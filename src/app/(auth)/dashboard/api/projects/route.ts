@@ -26,7 +26,6 @@ export async function GET() {
         name: projectsSchema.name,
         description: projectsSchema.description,
         color: projectsSchema.color,
-        isArchived: projectsSchema.isArchived,
         updatedAt: projectsSchema.updatedAt,
         createdAt: projectsSchema.createdAt,
         totalTasks: count(tasksSchema.id),

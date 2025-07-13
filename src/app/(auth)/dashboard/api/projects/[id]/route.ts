@@ -11,7 +11,6 @@ const updateProjectSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().nullable().optional(),
   color: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
-  isArchived: z.boolean().optional(),
 });
 
 // GET /api/projects/[id] - Fetch a single project with stats
@@ -39,7 +38,6 @@ export async function GET(
         name: projectsSchema.name,
         description: projectsSchema.description,
         color: projectsSchema.color,
-        isArchived: projectsSchema.isArchived,
         updatedAt: projectsSchema.updatedAt,
         createdAt: projectsSchema.createdAt,
         totalTasks: count(tasksSchema.id),

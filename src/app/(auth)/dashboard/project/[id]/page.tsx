@@ -2,7 +2,6 @@
 
 import type { Task } from '@/utils/taskUtils';
 import {
-  Archive,
   ArrowLeft,
   CheckCircle,
   Clock,
@@ -295,13 +294,6 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                     <button
                       type="button"
                       className="rounded-lg p-2.5 hover:bg-gray-200 transition-colors"
-                      title="Archive Project"
-                    >
-                      <Archive className="h-4 w-4 text-gray-600" />
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-lg p-2.5 hover:bg-gray-200 transition-colors"
                       title="More Options"
                     >
                       <MoreVertical className="h-4 w-4 text-gray-600" />
@@ -415,12 +407,6 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
 
                       <div className="flex items-center gap-3 flex-shrink-0">
                         <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                          <button
-                            type="button"
-                            className="rounded-md p-2 hover:bg-gray-200"
-                          >
-                            <Archive className="h-4 w-4 text-gray-600" />
-                          </button>
                           <button
                             type="button"
                             className="rounded-md p-2 hover:bg-gray-200"

@@ -6,7 +6,6 @@ export type Project = {
   name: string;
   description: string | null;
   color: string;
-  isArchived: boolean;
   updatedAt: Date;
   createdAt: Date;
   // Computed properties
@@ -27,7 +26,6 @@ type ProjectState = {
   addProject: (project: Project) => void;
   updateProject: (projectId: number, updates: Partial<Project>) => void;
   deleteProject: (projectId: number) => void;
-  archiveProject: (projectId: number) => void;
 
   // Loading states
   setLoading: (loading: boolean) => void;
@@ -36,7 +34,6 @@ type ProjectState = {
   // Getters
   getProjectById: (projectId: number) => Project | undefined;
   getActiveProjects: () => Project[];
-  getArchivedProjects: () => Project[];
 };
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -62,18 +59,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     projects: state.projects.filter(project => project.id !== projectId),
   })),
 
-  archiveProject: projectId => set(state => ({
-    projects: state.projects.map(project =>
-      project.id === projectId ? { ...project, isArchived: true } : project,
-    ),
-  })),
-
   // Loading state actions
   setLoading: loading => set({ loading }),
   setError: error => set({ error }),
 
   // Getters
   getProjectById: projectId => get().projects.find(p => p.id === projectId),
-  getActiveProjects: () => get().projects.filter(p => !p.isArchived),
-  getArchivedProjects: () => get().projects.filter(p => p.isArchived),
+  getActiveProjects: () => get().projects,
 }));

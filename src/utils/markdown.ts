@@ -6,8 +6,10 @@
  * Convert markdown text to plain text by removing formatting
  */
 export function markdownToPlainText(markdown: string): string {
-  if (!markdown) return '';
-  
+  if (!markdown) {
+    return '';
+  }
+
   return markdown
     // Remove headers
     .replace(/^#{1,6}\s+/gm, '')
@@ -30,8 +32,8 @@ export function markdownToPlainText(markdown: string): string {
     // Remove blockquotes
     .replace(/^>\s+/gm, '')
     // Remove list markers
-    .replace(/^[\s]*[-*+]\s+/gm, '')
-    .replace(/^[\s]*\d+\.\s+/gm, '')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
     // Remove horizontal rules
     .replace(/^[-*_]{3,}$/gm, '')
     // Clean up extra whitespace
@@ -49,18 +51,18 @@ export function markdownToPlainText(markdown: string): string {
  */
 export function truncateMarkdown(markdown: string, maxLength: number = 100): string {
   const plainText = markdownToPlainText(markdown);
-  
+
   if (plainText.length <= maxLength) {
     return plainText;
   }
-  
+
   // Find the last space within the limit to avoid cutting words
   const truncated = plainText.substring(0, maxLength);
   const lastSpace = truncated.lastIndexOf(' ');
-  
+
   if (lastSpace > maxLength * 0.8) {
-    return truncated.substring(0, lastSpace) + '...';
+    return `${truncated.substring(0, lastSpace)}...`;
   }
-  
-  return truncated + '...';
+
+  return `${truncated}...`;
 }

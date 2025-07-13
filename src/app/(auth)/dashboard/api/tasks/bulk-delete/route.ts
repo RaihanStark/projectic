@@ -20,7 +20,7 @@ export async function DELETE(request: NextRequest) {
       .from(tasksSchema)
       .where(and(
         inArray(tasksSchema.id, taskIds),
-        eq(tasksSchema.userId, userId)
+        eq(tasksSchema.userId, userId),
       ));
 
     if (existingTasks.length !== taskIds.length) {
@@ -32,12 +32,12 @@ export async function DELETE(request: NextRequest) {
       .delete(tasksSchema)
       .where(and(
         inArray(tasksSchema.id, taskIds),
-        eq(tasksSchema.userId, userId)
+        eq(tasksSchema.userId, userId),
       ));
 
-    return createSuccessResponse({ 
+    return createSuccessResponse({
       message: `Successfully deleted ${taskIds.length} tasks`,
-      deletedCount: taskIds.length 
+      deletedCount: taskIds.length,
     });
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {

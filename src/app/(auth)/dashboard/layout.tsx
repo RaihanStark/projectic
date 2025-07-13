@@ -4,8 +4,8 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import Header from '@/components/dashboard/Header';
 import Sidebar from '@/components/dashboard/Sidebar';
-import NewTaskModal from '@/components/NewTaskModal';
 import NewProjectModal from '@/components/NewProjectModal';
+import NewTaskModal from '@/components/NewTaskModal';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [isTaskModalOpen, setTaskModalOpen] = useState(false);
@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <div className="grid min-h-screen w-full grid-cols-[auto_1fr]">
-        <Sidebar 
+        <Sidebar
           onNewTaskClick={() => setTaskModalOpen(true)}
           onNewProjectClick={() => setProjectModalOpen(true)}
           taskCount={taskCount}

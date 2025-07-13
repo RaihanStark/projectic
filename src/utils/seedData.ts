@@ -1,5 +1,5 @@
 import { db } from '@/libs/DB';
-import { tasksSchema, subTasksSchema, projectsSchema } from '@/models/Schema';
+import { projectsSchema, subTasksSchema, tasksSchema } from '@/models/Schema';
 
 export async function seedSampleTasks(userId: number) {
   // First create some sample projects
@@ -74,7 +74,7 @@ export async function seedSampleTasks(userId: number) {
       urgency: 'medium' as const,
       deadline: new Date('2024-12-10'),
     },
-    
+
     // Personal Finance App tasks
     {
       userId,
@@ -106,7 +106,7 @@ export async function seedSampleTasks(userId: number) {
       urgency: 'low' as const,
       deadline: new Date('2025-03-01'),
     },
-    
+
     // Task Management System tasks
     {
       userId,
@@ -128,7 +128,7 @@ export async function seedSampleTasks(userId: number) {
       urgency: 'medium' as const,
       deadline: new Date('2025-02-15'),
     },
-    
+
     // Learning Platform tasks
     {
       userId,
@@ -150,7 +150,7 @@ export async function seedSampleTasks(userId: number) {
       urgency: 'medium' as const,
       deadline: new Date('2025-02-10'),
     },
-    
+
     // Social Media Dashboard tasks
     {
       userId,
@@ -172,7 +172,7 @@ export async function seedSampleTasks(userId: number) {
       urgency: 'medium' as const,
       deadline: new Date('2025-02-05'),
     },
-    
+
     // Tasks without projects (optional)
     {
       userId,

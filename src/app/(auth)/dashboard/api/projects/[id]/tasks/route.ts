@@ -1,23 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { and, eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
 import { db } from '@/libs/DB';
-import { tasksSchema, subTasksSchema } from '@/models/Schema';
+import { subTasksSchema, tasksSchema } from '@/models/Schema';
 import { getCurrentUserId } from '@/utils/auth';
-import { eq, and } from 'drizzle-orm';
 
 // GET /api/projects/[id]/tasks - Fetch all tasks for a specific project
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const userId = await getCurrentUserId();
     const { id } = await params;
-    const projectId = parseInt(id);
+    const projectId = Number.parseInt(id);
 
     if (isNaN(projectId)) {
       return NextResponse.json(
         { error: 'Invalid project ID' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,14 +43,14 @@ export async function GET(
       .where(
         and(
           eq(tasksSchema.userId, userId),
-          eq(tasksSchema.projectId, projectId)
-        )
+          eq(tasksSchema.projectId, projectId),
+        ),
       )
       .orderBy(tasksSchema.createdAt);
 
     // Group subtasks with their tasks
     const tasksMap = new Map();
-    tasks.forEach(row => {
+    tasks.forEach((row) => {
       const taskId = row.id;
       if (!tasksMap.has(taskId)) {
         tasksMap.set(taskId, {
@@ -86,7 +87,7 @@ export async function GET(
     console.error('Error fetching project tasks:', error);
     return NextResponse.json(
       { error: 'Failed to fetch project tasks' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

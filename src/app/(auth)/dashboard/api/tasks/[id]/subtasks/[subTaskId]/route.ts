@@ -7,7 +7,7 @@ import { createErrorResponse, createSuccessResponse, getCurrentUserId } from '@/
 // PUT /api/tasks/[id]/subtasks/[subTaskId] - Update sub-task
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; subTaskId: string }> }
+  { params }: { params: Promise<{ id: string; subTaskId: string }> },
 ) {
   try {
     const userId = await getCurrentUserId();
@@ -38,7 +38,7 @@ export async function PUT(
       .from(subTasksSchema)
       .where(and(
         eq(subTasksSchema.id, subTaskIdNum),
-        eq(subTasksSchema.taskId, taskId)
+        eq(subTasksSchema.taskId, taskId),
       ))
       .limit(1);
 
@@ -88,7 +88,7 @@ export async function PUT(
 // DELETE /api/tasks/[id]/subtasks/[subTaskId] - Delete sub-task
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; subTaskId: string }> }
+  { params }: { params: Promise<{ id: string; subTaskId: string }> },
 ) {
   try {
     const userId = await getCurrentUserId();
@@ -117,7 +117,7 @@ export async function DELETE(
       .from(subTasksSchema)
       .where(and(
         eq(subTasksSchema.id, subTaskIdNum),
-        eq(subTasksSchema.taskId, taskId)
+        eq(subTasksSchema.taskId, taskId),
       ))
       .limit(1);
 

@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { count, eq, sql } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { db } from '@/libs/DB';
 import { projectsSchema, tasksSchema } from '@/models/Schema';
 import { getCurrentUserId } from '@/utils/auth';
-import { eq, and, isNull, count, sql } from 'drizzle-orm';
-import { z } from 'zod';
 
 // Validation schema for creating a project
 const createProjectSchema = z.object({
@@ -44,7 +45,7 @@ export async function GET() {
     console.error('Error fetching projects:', error);
     return NextResponse.json(
       { error: 'Failed to fetch projects' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -74,13 +75,13 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
     console.error('Error creating project:', error);
     return NextResponse.json(
       { error: 'Failed to create project' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

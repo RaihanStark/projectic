@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/libs/DB';
-import { tasksSchema, subTasksSchema, projectsSchema } from '@/models/Schema';
+import { projectsSchema, tasksSchema } from '@/models/Schema';
 import { createErrorResponse, createSuccessResponse, getCurrentUserId } from '@/utils/auth';
 
 export async function GET() {
@@ -35,16 +35,16 @@ export async function GET() {
 
     // Fetch all subtasks for the user's tasks
     const taskIds = tasks.map(task => task.id);
-    
+
     // Group subtasks by taskId
     const subtasksByTaskId: { [taskId: number]: any[] } = {};
     if (taskIds.length > 0) {
       const allSubtasks = await db.query.subTasksSchema.findMany({
         where: (subtask, { inArray }) => inArray(subtask.taskId, taskIds),
-        orderBy: (subtask, { asc }) => [asc(subtask.order)]
+        orderBy: (subtask, { asc }) => [asc(subtask.order)],
       });
-      
-      allSubtasks.forEach(subtask => {
+
+      allSubtasks.forEach((subtask) => {
         const taskId = subtask.taskId;
         if (!subtasksByTaskId[taskId]) {
           subtasksByTaskId[taskId] = [];
@@ -56,7 +56,7 @@ export async function GET() {
     // Combine tasks with their subtasks
     const tasksWithSubtasks = tasks.map(task => ({
       ...task,
-      subtasks: subtasksByTaskId[task.id] || []
+      subtasks: subtasksByTaskId[task.id] || [],
     }));
 
     return createSuccessResponse(tasksWithSubtasks);

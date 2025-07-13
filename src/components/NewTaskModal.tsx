@@ -2,13 +2,13 @@
 
 import type { FormEvent } from 'react';
 import type { CreateTaskData } from '@/utils/taskUtils';
-import { X, Circle } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import MarkdownEditor from './MarkdownEditor';
-import { useTaskStore } from '@/stores/taskStore';
-import { useProjectStore } from '@/stores/projectStore';
-import { createTask } from '@/utils/taskUtils';
+import { Circle, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useProjectStore } from '@/stores/projectStore';
+import { useTaskStore } from '@/stores/taskStore';
+import { createTask } from '@/utils/taskUtils';
+import MarkdownEditor from './MarkdownEditor';
 
 type NewTaskModalProps = {
   isOpen: boolean;
@@ -17,20 +17,19 @@ type NewTaskModalProps = {
   selectedProjectId?: number;
 };
 
-
 const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskModalProps) => {
   // Zustand stores
   const { addTask } = useTaskStore();
-  const { 
-    projects, 
-    setProjects, 
-    loading: projectsLoading, 
-    error: projectsError, 
-    setLoading: setProjectsLoading, 
+  const {
+    projects,
+    setProjects,
+    loading: projectsLoading,
+    error: projectsError,
+    setLoading: setProjectsLoading,
     setError: setProjectsError,
-    getActiveProjects 
+    getActiveProjects,
   } = useProjectStore();
-  
+
   const [task, setTask] = useState({
     title: '',
     description: '',
@@ -176,7 +175,7 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskM
             </label>
             <MarkdownEditor
               value={task.description}
-              onChange={(value) => setTask(prev => ({ ...prev, description: value }))}
+              onChange={value => setTask(prev => ({ ...prev, description: value }))}
               placeholder="Add a more detailed description..."
               disabled={loading}
               height={200}
@@ -197,15 +196,17 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskM
               disabled={loading || projectsLoading}
             >
               <option value="">No Project</option>
-              {projectsLoading ? (
-                <option disabled>Loading projects...</option>
-              ) : (
-                getActiveProjects().map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))
-              )}
+              {projectsLoading
+                ? (
+                    <option disabled>Loading projects...</option>
+                  )
+                : (
+                    getActiveProjects().map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))
+                  )}
             </select>
             {/* Visual Project Indicator */}
             {task.projectId && (
@@ -218,7 +219,9 @@ const NewTaskModal = ({ isOpen, onClose, onSubmit, selectedProjectId }: NewTaskM
                   }}
                 />
                 <span className="text-xs text-gray-500">
-                  Task will be added to {getActiveProjects().find(p => p.id === Number(task.projectId))?.name}
+                  Task will be added to
+                  {' '}
+                  {getActiveProjects().find(p => p.id === Number(task.projectId))?.name}
                 </span>
               </div>
             )}

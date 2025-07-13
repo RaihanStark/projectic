@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { and, eq, asc } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import { subTasksSchema, tasksSchema } from '@/models/Schema';
 import { createErrorResponse, createSuccessResponse, getCurrentUserId } from '@/utils/auth';
@@ -7,7 +7,7 @@ import { createErrorResponse, createSuccessResponse, getCurrentUserId } from '@/
 // GET /api/tasks/[id]/subtasks - Get all sub-tasks for a task
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const userId = await getCurrentUserId();
@@ -55,7 +55,7 @@ export async function GET(
 // POST /api/tasks/[id]/subtasks - Create a new sub-task
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const userId = await getCurrentUserId();

@@ -1,21 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import {
-  MoreVertical,
-  Plus,
+  AlertCircle,
+  Archive,
   Calendar,
   CheckCircle,
-  AlertCircle,
   Clock,
-  Archive,
   Edit,
-  Star,
+  MoreVertical,
+  Plus,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import NewProjectModal from '@/components/NewProjectModal';
 import { useProjectStore } from '@/stores/projectStore';
-import toast from 'react-hot-toast';
-import { formatDistanceToNow } from 'date-fns';
 
 type Project = {
   id: number;
@@ -35,7 +34,6 @@ export default function ProjectsPage() {
   const { projects, setProjects, loading, error, setLoading, setError } = useProjectStore();
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [starredProjects, setStarredProjects] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchProjects();
@@ -58,18 +56,6 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleStarProject = (projectId: number) => {
-    setStarredProjects(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(projectId)) {
-        newSet.delete(projectId);
-      } else {
-        newSet.add(projectId);
-      }
-      return newSet;
-    });
   };
 
   const handleCreateProject = async (newProject: any) => {
@@ -173,7 +159,7 @@ export default function ProjectsPage() {
       </div>
 
       <div className="grid gap-4">
-        {activeProjects.map((project) => (
+        {activeProjects.map(project => (
           <div
             key={project.id}
             className="group rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
@@ -185,37 +171,27 @@ export default function ProjectsPage() {
                   className="w-4 h-4 rounded-full mt-1 flex-shrink-0"
                   style={{ backgroundColor: project.color }}
                 />
-                
+
                 {/* Project Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-gray-900 truncate">
-                      {project.name}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => handleStarProject(project.id)}
-                      className="flex-shrink-0"
-                    >
-                      <Star
-                        className={`h-4 w-4 ${
-                          starredProjects.has(project.id)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300 hover:text-yellow-400'
-                        }`}
-                      />
-                    </button>
-                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 truncate mb-1">
+                    {project.name}
+                  </h3>
                   <p className="text-gray-600 text-sm mb-4">{project.description}</p>
-                  
+
                   {/* Progress Bar */}
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700">
-                        {project.completedTasks || 0}/{project.totalTasks || 0} tasks completed
+                        {project.completedTasks || 0}
+                        /
+                        {project.totalTasks || 0}
+                        {' '}
+                        tasks completed
                       </span>
                       <span className="text-sm text-gray-500">
-                        {getProgressPercentage(project.completedTasks || 0, project.totalTasks || 0)}%
+                        {getProgressPercentage(project.completedTasks || 0, project.totalTasks || 0)}
+                        %
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -228,29 +204,40 @@ export default function ProjectsPage() {
                       />
                     </div>
                   </div>
-                  
+
                   {/* Project Stats */}
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     {project.overdueTasks && project.overdueTasks > 0 && (
                       <div className="flex items-center gap-1">
                         <AlertCircle className="h-4 w-4 text-red-500" />
-                        <span>{project.overdueTasks} overdue</span>
+                        <span>
+                          {project.overdueTasks}
+                          {' '}
+                          overdue
+                        </span>
                       </div>
                     )}
                     {project.dueTodayTasks && project.dueTodayTasks > 0 && (
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-orange-500" />
-                        <span>{project.dueTodayTasks} due today</span>
+                        <span>
+                          {project.dueTodayTasks}
+                          {' '}
+                          due today
+                        </span>
                       </div>
                     )}
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>Updated {formatLastActivity(project.updatedAt)}</span>
+                      <span>
+                        Updated
+                        {formatLastActivity(project.updatedAt)}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               {/* Project Actions */}
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button

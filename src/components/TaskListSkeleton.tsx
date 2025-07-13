@@ -1,7 +1,5 @@
 'use client';
 
-import { cn } from '@/utils/cn';
-
 const SkeletonItem = () => (
   <div className="animate-pulse bg-gray-200 rounded" />
 );
@@ -9,7 +7,7 @@ const SkeletonItem = () => (
 const TaskItemSkeleton = () => (
   <li className="group p-4 transition-colors hover:bg-gray-50">
     <div className="flex items-start gap-3 w-full">
-      {/* Left side - Checkbox, Star, and Task Info */}
+      {/* Left side - Checkbox and Task Info */}
       <div className="flex items-start gap-3 flex-1 min-w-0">
         <div className="flex items-center gap-3 mt-1">
           {/* Checkbox skeleton */}

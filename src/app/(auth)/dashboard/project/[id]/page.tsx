@@ -1,5 +1,6 @@
 'use client';
 
+import type { Task } from '@/utils/taskUtils';
 import {
   Archive,
   ArrowLeft,
@@ -8,18 +9,17 @@ import {
   Edit,
   MoreVertical,
   Plus,
-  Star,
   Trash,
 } from 'lucide-react';
 import Link from 'next/link';
-import { use, useState, useEffect } from 'react';
-import { cn } from '@/utils/cn';
-import { formatDate, getStatusDisplayName, getUrgencyDisplayName, type Task } from '@/utils/taskUtils';
+import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import NewTaskModal from '@/components/NewTaskModal';
 import NewProjectModal from '@/components/NewProjectModal';
-import { useTaskStore } from '@/stores/taskStore';
+import NewTaskModal from '@/components/NewTaskModal';
 import { useProjectStore } from '@/stores/projectStore';
+import { useTaskStore } from '@/stores/taskStore';
+import { cn } from '@/utils/cn';
+import { formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 
 // Mock tasks for each project
 const mockProjectTasks = {
@@ -31,7 +31,6 @@ const mockProjectTasks = {
       status: 'in-progress' as const,
       urgency: 'high' as const,
       deadline: '2024-12-25',
-      isStarred: true,
     },
     {
       id: 2,
@@ -40,7 +39,6 @@ const mockProjectTasks = {
       status: 'done' as const,
       urgency: 'medium' as const,
       deadline: '2024-12-20',
-      isStarred: true,
     },
     {
       id: 3,
@@ -49,7 +47,6 @@ const mockProjectTasks = {
       status: 'todo' as const,
       urgency: 'high' as const,
       deadline: '2024-12-28',
-      isStarred: false,
     },
   ],
   2: [
@@ -60,7 +57,6 @@ const mockProjectTasks = {
       status: 'todo' as const,
       urgency: 'medium' as const,
       deadline: '2025-01-15',
-      isStarred: false,
     },
     {
       id: 5,
@@ -69,7 +65,6 @@ const mockProjectTasks = {
       status: 'in-progress' as const,
       urgency: 'low' as const,
       deadline: '2024-12-30',
-      isStarred: false,
     },
   ],
   3: [
@@ -80,7 +75,6 @@ const mockProjectTasks = {
       status: 'todo' as const,
       urgency: 'high' as const,
       deadline: '2024-12-30',
-      isStarred: false,
     },
   ],
 };
@@ -175,11 +169,11 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
       }
 
       const updatedTask = await response.json();
-      setTasks(tasks.map(task => 
-        task.id === taskId ? updatedTask : task
+      setTasks(tasks.map(task =>
+        task.id === taskId ? updatedTask : task,
       ));
       updateTask(taskId, { status: newStatus });
-      
+
       // Update project stats
       await fetchProjectAndTasks();
     } catch (error) {
@@ -210,12 +204,6 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
     );
   }
 
-  const handleToggleStar = (taskId: number) => {
-    setTasks(tasks.map(task =>
-      task.id === taskId ? { ...task, isStarred: !task.isStarred } : task,
-    ));
-  };
-
   const handleDeleteTask = async (taskId: number) => {
     try {
       const response = await fetch(`/dashboard/api/tasks/${taskId}`, {
@@ -228,7 +216,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
 
       setTasks(tasks.filter(task => task.id !== taskId));
       toast.success('Task deleted successfully');
-      
+
       // Update project stats
       await fetchProjectAndTasks();
     } catch (error) {
@@ -408,20 +396,6 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                             className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
                             onChange={() => handleToggleTaskStatus(task.id, task.status)}
                           />
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStar(task.id)}
-                            className="flex-shrink-0"
-                          >
-                            <Star
-                              className={cn(
-                                'h-5 w-5',
-                                task.isStarred
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-gray-300 group-hover:text-yellow-400',
-                              )}
-                            />
-                          </button>
                         </div>
 
                         <Link

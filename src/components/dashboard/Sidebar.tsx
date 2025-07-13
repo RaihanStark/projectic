@@ -3,14 +3,14 @@
 import {
   Circle,
   Folder,
+  FolderOpen,
   Home,
   Plus,
-  FolderOpen,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { useProjectStore } from '@/stores/projectStore';
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { useProjectStore } from '@/stores/projectStore';
 
 type SidebarProps = {
   onNewTaskClick: () => void;
@@ -65,8 +65,8 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
           <Link
             href="/dashboard"
             className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              pathname === '/dashboard' 
-                ? 'bg-gray-100 text-gray-900' 
+              pathname === '/dashboard'
+                ? 'bg-gray-100 text-gray-900'
                 : 'text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -79,8 +79,8 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
           <Link
             href="/dashboard/projects"
             className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              pathname === '/dashboard/projects' 
-                ? 'bg-gray-100 text-gray-900' 
+              pathname === '/dashboard/projects'
+                ? 'bg-gray-100 text-gray-900'
                 : 'text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -91,7 +91,7 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
             </span>
           </Link>
         </nav>
-        
+
         {/* Projects Section */}
         <div className="px-4">
           <div className="flex items-center justify-between mb-2 px-3">
@@ -108,22 +108,22 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
             </button>
           </div>
           <nav className="grid items-start text-sm font-medium space-y-1">
-            {activeProjects.map((project) => (
+            {activeProjects.map(project => (
               <Link
                 key={project.id}
                 href={`/dashboard/project/${project.id}`}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-                  pathname === `/dashboard/project/${project.id}` 
-                    ? 'bg-gray-100 text-gray-900' 
+                  pathname === `/dashboard/project/${project.id}`
+                    ? 'bg-gray-100 text-gray-900'
                     : 'text-gray-500 hover:text-gray-900'
                 }`}
               >
-                <Circle 
-                  className="h-4 w-4" 
-                  style={{ 
-                    color: project.color, 
-                    fill: project.color 
-                  }} 
+                <Circle
+                  className="h-4 w-4"
+                  style={{
+                    color: project.color,
+                    fill: project.color,
+                  }}
                 />
                 <span className="flex-1 truncate">{project.name}</span>
                 <span className="flex h-5 w-6 items-center justify-center rounded-full bg-gray-200 text-xs">

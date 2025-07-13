@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Circle } from 'lucide-react';
+import { Circle, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 type Project = {
   id: number;
@@ -58,7 +58,7 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, editProject }: NewProjectM
   }, [editProject, isOpen]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setProject(prev => ({ ...prev, [name]: value }));
@@ -70,7 +70,7 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, editProject }: NewProjectM
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!project.name.trim()) {
       setError('Project name is required');
       return;
@@ -81,7 +81,7 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, editProject }: NewProjectM
 
     try {
       const isEditing = !!editProject;
-      const url = isEditing 
+      const url = isEditing
         ? `/dashboard/api/projects/${editProject.id}`
         : '/dashboard/api/projects';
       const method = isEditing ? 'PATCH' : 'POST';
@@ -192,7 +192,7 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, editProject }: NewProjectM
               Project Color
             </label>
             <div className="grid grid-cols-4 gap-3">
-              {projectColors.map((color) => (
+              {projectColors.map(color => (
                 <button
                   key={color.value}
                   type="button"
@@ -247,10 +247,9 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, editProject }: NewProjectM
               className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 disabled:opacity-50"
               disabled={loading || !project.name.trim()}
             >
-              {loading 
-                ? (editProject ? 'Updating...' : 'Creating...') 
-                : (editProject ? 'Update Project' : 'Create Project')
-              }
+              {loading
+                ? (editProject ? 'Updating...' : 'Creating...')
+                : (editProject ? 'Update Project' : 'Create Project')}
             </button>
           </div>
         </form>

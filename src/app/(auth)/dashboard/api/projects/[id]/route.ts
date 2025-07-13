@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { and, count, eq, sql } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { db } from '@/libs/DB';
 import { projectsSchema, tasksSchema } from '@/models/Schema';
 import { getCurrentUserId } from '@/utils/auth';
-import { eq, and, count, sql } from 'drizzle-orm';
-import { z } from 'zod';
 
 // Validation schema for updating a project
 const updateProjectSchema = z.object({
@@ -16,17 +17,17 @@ const updateProjectSchema = z.object({
 // GET /api/projects/[id] - Fetch a single project with stats
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const userId = await getCurrentUserId();
     const { id } = await params;
-    const projectId = parseInt(id);
+    const projectId = Number.parseInt(id);
 
     if (isNaN(projectId)) {
       return NextResponse.json(
         { error: 'Invalid project ID' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -51,15 +52,15 @@ export async function GET(
       .where(
         and(
           eq(projectsSchema.id, projectId),
-          eq(projectsSchema.userId, userId)
-        )
+          eq(projectsSchema.userId, userId),
+        ),
       )
       .groupBy(projectsSchema.id);
 
     if (!project) {
       return NextResponse.json(
         { error: 'Project not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -68,7 +69,7 @@ export async function GET(
     console.error('Error fetching project:', error);
     return NextResponse.json(
       { error: 'Failed to fetch project' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -76,18 +77,18 @@ export async function GET(
 // PATCH /api/projects/[id] - Update a project
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const userId = await getCurrentUserId();
     const { id } = await params;
-    const projectId = parseInt(id);
+    const projectId = Number.parseInt(id);
     const body = await request.json();
 
     if (isNaN(projectId)) {
       return NextResponse.json(
         { error: 'Invalid project ID' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -104,15 +105,15 @@ export async function PATCH(
       .where(
         and(
           eq(projectsSchema.id, projectId),
-          eq(projectsSchema.userId, userId)
-        )
+          eq(projectsSchema.userId, userId),
+        ),
       )
       .returning();
 
     if (!updatedProject) {
       return NextResponse.json(
         { error: 'Project not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -121,13 +122,13 @@ export async function PATCH(
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
     console.error('Error updating project:', error);
     return NextResponse.json(
       { error: 'Failed to update project' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -135,17 +136,17 @@ export async function PATCH(
 // DELETE /api/projects/[id] - Delete a project
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const userId = await getCurrentUserId();
     const { id } = await params;
-    const projectId = parseInt(id);
+    const projectId = Number.parseInt(id);
 
     if (isNaN(projectId)) {
       return NextResponse.json(
         { error: 'Invalid project ID' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -155,15 +156,15 @@ export async function DELETE(
       .where(
         and(
           eq(projectsSchema.id, projectId),
-          eq(projectsSchema.userId, userId)
-        )
+          eq(projectsSchema.userId, userId),
+        ),
       )
       .returning();
 
     if (!deletedProject) {
       return NextResponse.json(
         { error: 'Project not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -172,7 +173,7 @@ export async function DELETE(
     console.error('Error deleting project:', error);
     return NextResponse.json(
       { error: 'Failed to delete project' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

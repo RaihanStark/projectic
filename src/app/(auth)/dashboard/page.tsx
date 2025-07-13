@@ -233,12 +233,15 @@ export default function Dashboard() {
       return true;
     })
     .sort((a, b) => {
-      // For "All Tasks" tab, move done tasks to bottom
+      // For "All Tasks" tab, move done and cancelled tasks to bottom
       if (activeTab === 'all') {
-        if (a.status === 'done' && b.status !== 'done') {
+        const aIsInactive = a.status === 'done' || a.status === 'cancelled';
+        const bIsInactive = b.status === 'done' || b.status === 'cancelled';
+        
+        if (aIsInactive && !bIsInactive) {
           return 1;
         }
-        if (a.status !== 'done' && b.status === 'done') {
+        if (!aIsInactive && bIsInactive) {
           return -1;
         }
       }
@@ -502,7 +505,7 @@ export default function Dashboard() {
                 key={task.id}
                 className={cn(
                   'group p-4 transition-colors hover:bg-gray-50',
-                  task.status === 'done' && 'opacity-60 bg-gray-50/50',
+                  (task.status === 'done' || task.status === 'cancelled') && 'opacity-60 bg-gray-50/50',
                 )}
               >
                 <div className="flex items-start gap-3 w-full">
@@ -525,7 +528,7 @@ export default function Dashboard() {
                       <div className="space-y-1">
                         <p className={cn(
                           'font-medium line-clamp-1',
-                          task.status === 'done'
+                          (task.status === 'done' || task.status === 'cancelled')
                             ? 'text-gray-500 line-through'
                             : 'text-gray-900',
                         )}
@@ -535,7 +538,7 @@ export default function Dashboard() {
 
                         <p className={cn(
                           'text-sm line-clamp-2',
-                          task.status === 'done'
+                          (task.status === 'done' || task.status === 'cancelled')
                             ? 'text-gray-400'
                             : 'text-gray-500',
                         )}
@@ -548,19 +551,19 @@ export default function Dashboard() {
                             <div className="flex items-center gap-2">
                               <CheckCircle className={cn(
                                 'h-3 w-3',
-                                task.status === 'done' ? 'text-gray-400' : 'text-green-500',
+                                (task.status === 'done' || task.status === 'cancelled') ? 'text-gray-400' : 'text-green-500',
                               )}
                               />
                               <div className="flex items-center gap-2">
                                 <div className={cn(
                                   'w-16 h-1.5 rounded-full',
-                                  task.status === 'done' ? 'bg-gray-200' : 'bg-gray-200',
+                                  (task.status === 'done' || task.status === 'cancelled') ? 'bg-gray-200' : 'bg-gray-200',
                                 )}
                                 >
                                   <div
                                     className={cn(
                                       'h-1.5 rounded-full transition-all duration-300',
-                                      task.status === 'done' ? 'bg-gray-400' : 'bg-green-500',
+                                      (task.status === 'done' || task.status === 'cancelled') ? 'bg-gray-400' : 'bg-green-500',
                                     )}
                                     style={{
                                       width: `${subTaskCounts[task.id]?.total > 0 ? (subTaskCounts[task.id].completed / subTaskCounts[task.id].total) * 100 : 0}%`,
@@ -570,7 +573,7 @@ export default function Dashboard() {
                                 </div>
                                 <span className={cn(
                                   'text-xs font-medium',
-                                  task.status === 'done' ? 'text-gray-400' : 'text-gray-600',
+                                  (task.status === 'done' || task.status === 'cancelled') ? 'text-gray-400' : 'text-gray-600',
                                 )}
                                 >
                                   {subTaskCounts[task.id]?.completed}
@@ -642,7 +645,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2">
                       <p className={cn(
                         'text-sm whitespace-nowrap',
-                        task.status === 'done' ? 'text-gray-400' : 'text-gray-500',
+                        (task.status === 'done' || task.status === 'cancelled') ? 'text-gray-400' : 'text-gray-500',
                       )}
                       >
                         {formatDate(task.deadline)}
@@ -653,7 +656,7 @@ export default function Dashboard() {
                       >
                         <MoreVertical className={cn(
                           'h-4 w-4',
-                          task.status === 'done' ? 'text-gray-400' : 'text-gray-600',
+                          (task.status === 'done' || task.status === 'cancelled') ? 'text-gray-400' : 'text-gray-600',
                         )}
                         />
                       </button>

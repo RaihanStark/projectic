@@ -178,34 +178,6 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
     setShowEditProjectModal(false);
   };
 
-  const handleToggleTaskStatus = async (taskId: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'done' ? 'todo' : 'done';
-    try {
-      const response = await fetch(`/dashboard/api/tasks/${taskId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update task');
-      }
-
-      const updatedTask = await response.json();
-      setTasks(tasks.map(task =>
-        task.id === taskId ? updatedTask : task,
-      ));
-      updateTask(taskId, { status: newStatus });
-
-      // Update project stats
-      await fetchProjectAndTasks();
-    } catch (error) {
-      console.error('Error updating task:', error);
-      toast.error('Failed to update task');
-    }
-  };
 
   if (loading) {
     return (
@@ -408,15 +380,6 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                   >
                     <div className="flex items-start gap-3 w-full">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mt-1">
-                          <input
-                            type="checkbox"
-                            checked={task.status === 'done'}
-                            className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
-                            onChange={() => handleToggleTaskStatus(task.id, task.status)}
-                          />
-                        </div>
-
                         <Link
                           href={`/dashboard/task/${task.id}`}
                           className="flex-1 min-w-0 hover:bg-gray-100 rounded-lg p-2 -m-2 transition-colors"

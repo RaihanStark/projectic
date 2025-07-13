@@ -140,28 +140,6 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
           </nav>
         </div>
 
-        {/* Labels Section */}
-        <div className="px-4 mt-6">
-          <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-gray-500">
-            Labels
-          </h3>
-          <nav className="grid items-start text-sm font-medium">
-            <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900"
-            >
-              <Circle className="h-4 w-4 fill-red-500 text-red-500" />
-              Important
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900"
-            >
-              <Circle className="h-4 w-4 fill-green-500 text-green-500" />
-              Updates
-            </Link>
-          </nav>
-        </div>
       </div>
     </aside>
   );

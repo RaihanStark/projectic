@@ -117,16 +117,19 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
                     ? 'bg-gray-100 text-gray-900'
                     : 'text-gray-500 hover:text-gray-900'
                 }`}
+                title={project.name}
               >
                 <Circle
-                  className="h-4 w-4"
+                  className="h-4 w-4 flex-shrink-0"
                   style={{
                     color: project.color,
                     fill: project.color,
                   }}
                 />
-                <span className="flex-1 truncate">{project.name}</span>
-                <span className="flex h-5 w-6 items-center justify-center rounded-full bg-gray-200 text-xs">
+                <span className="flex-1 truncate min-w-0">
+                  {project.name.length > 19 ? `${project.name.substring(0, 19)}...` : project.name}
+                </span>
+                <span className="flex h-5 w-6 items-center justify-center rounded-full bg-gray-200 text-xs flex-shrink-0">
                   {project.totalTasks || 0}
                 </span>
               </Link>

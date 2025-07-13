@@ -6,13 +6,15 @@ import {
   CheckCircle,
   Clock,
   Edit,
-  MoreVertical,
   Plus,
   Trash,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import ConfirmationDialog from '@/components/ConfirmationDialog';
 import NewProjectModal from '@/components/NewProjectModal';
 import NewTaskModal from '@/components/NewTaskModal';
 import { useProjectStore } from '@/stores/projectStore';
@@ -95,11 +97,13 @@ const statusClasses: { [key: string]: string } = {
 export default function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const projectId = Number.parseInt(id, 10);
+  const router = useRouter();
 
   const [project, setProject] = useState<any>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { updateTask } = useTaskStore();
@@ -144,6 +148,28 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
 
   const handleEditProject = () => {
     setShowEditProjectModal(true);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!project) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/dashboard/api/projects/${project.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete project');
+      }
+
+      toast.success('Project deleted successfully');
+      router.push('/dashboard/projects');
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Failed to delete project');
+    }
   };
 
   const handleUpdateProject = async (updatedProject: any) => {
@@ -294,9 +320,10 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                     <button
                       type="button"
                       className="rounded-lg p-2.5 hover:bg-gray-200 transition-colors"
-                      title="More Options"
+                      title="Delete Project"
+                      onClick={() => setShowDeleteConfirm(true)}
                     >
-                      <MoreVertical className="h-4 w-4 text-gray-600" />
+                      <Trash2 className="h-4 w-4 text-gray-600" />
                     </button>
                   </div>
                 </div>
@@ -445,12 +472,6 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                           <p className="text-sm text-gray-500 whitespace-nowrap">
                             {formatDate(task.deadline)}
                           </p>
-                          <button
-                            type="button"
-                            className="rounded-md p-2 hover:bg-gray-200"
-                          >
-                            <MoreVertical className="h-4 w-4 text-gray-600" />
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -491,6 +512,18 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
         onClose={() => setShowEditProjectModal(false)}
         onSubmit={handleUpdateProject}
         editProject={project}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteProject}
+        title="Delete Project"
+        message={`Are you sure you want to delete "${project?.name}"? This action cannot be undone and will also delete all ${tasks.length} task${tasks.length !== 1 ? 's' : ''} associated with this project.`}
+        confirmText="Delete Project"
+        cancelText="Cancel"
+        isDestructive
       />
     </div>
   );

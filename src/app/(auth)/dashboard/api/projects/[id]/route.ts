@@ -148,25 +148,32 @@ export async function DELETE(
       );
     }
 
-    // Delete the project (tasks will be orphaned, not deleted)
-    const [deletedProject] = await db
-      .delete(projectsSchema)
-      .where(
-        and(
-          eq(projectsSchema.id, projectId),
-          eq(projectsSchema.userId, userId),
-        ),
-      )
-      .returning();
+    // First check if the project exists and belongs to the user
+    const project = await db.query.projectsSchema.findFirst({
+      where: and(
+        eq(projectsSchema.id, projectId),
+        eq(projectsSchema.userId, userId),
+      ),
+    });
 
-    if (!deletedProject) {
+    if (!project) {
       return NextResponse.json(
         { error: 'Project not found' },
         { status: 404 },
       );
     }
 
-    return NextResponse.json({ message: 'Project deleted successfully' });
+    // Delete all tasks associated with the project
+    await db
+      .delete(tasksSchema)
+      .where(eq(tasksSchema.projectId, projectId));
+
+    // Delete the project
+    await db
+      .delete(projectsSchema)
+      .where(eq(projectsSchema.id, projectId));
+
+    return NextResponse.json({ message: 'Project and associated tasks deleted successfully' });
   } catch (error) {
     console.error('Error deleting project:', error);
     return NextResponse.json(

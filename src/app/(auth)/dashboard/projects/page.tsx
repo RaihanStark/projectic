@@ -6,12 +6,13 @@ import {
   CheckCircle,
   Clock,
   Edit,
-  MoreVertical,
   Plus,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import ConfirmationDialog from '@/components/ConfirmationDialog';
 import NewProjectModal from '@/components/NewProjectModal';
 import { useProjectStore } from '@/stores/projectStore';
 
@@ -32,6 +33,8 @@ export default function ProjectsPage() {
   const { projects, setProjects, loading, error, setLoading, setError } = useProjectStore();
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -75,6 +78,29 @@ export default function ProjectsPage() {
   const handleCloseModal = () => {
     setShowNewProjectModal(false);
     setEditingProject(null);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!projectToDelete) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/dashboard/api/projects/${projectToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete project');
+      }
+
+      await fetchProjects();
+      toast.success('Project deleted successfully');
+      setProjectToDelete(null);
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Failed to delete project');
+    }
   };
 
   const getProgressPercentage = (completed: number, total: number) => {
@@ -208,16 +234,16 @@ export default function ProjectsPage() {
                     >
                       <Edit className="h-4 w-4 text-gray-600" />
                     </button>
-                  </div>
-
-                  {/* More menu */}
-                  <div className="relative">
                     <button
                       type="button"
                       className="rounded-md p-2 hover:bg-gray-200"
-                      title="More Options"
+                      title="Delete Project"
+                      onClick={() => {
+                        setProjectToDelete(project);
+                        setShowDeleteConfirm(true);
+                      }}
                     >
-                      <MoreVertical className="h-4 w-4 text-gray-600" />
+                      <Trash2 className="h-4 w-4 text-gray-600" />
                     </button>
                   </div>
                 </div>
@@ -252,6 +278,21 @@ export default function ProjectsPage() {
         onClose={handleCloseModal}
         onSubmit={editingProject ? handleUpdateProject : handleCreateProject}
         editProject={editingProject}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setProjectToDelete(null);
+        }}
+        onConfirm={handleDeleteProject}
+        title="Delete Project"
+        message={`Are you sure you want to delete "${projectToDelete?.name}"? This action cannot be undone and will also delete all tasks associated with this project.`}
+        confirmText="Delete Project"
+        cancelText="Cancel"
+        isDestructive
       />
     </div>
   );

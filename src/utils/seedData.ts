@@ -1,97 +1,198 @@
 import { db } from '@/libs/DB';
-import { tasksSchema, subTasksSchema } from '@/models/Schema';
+import { projectsSchema, subTasksSchema, tasksSchema } from '@/models/Schema';
 
 export async function seedSampleTasks(userId: number) {
-  const sampleTasks = [
+  // First create some sample projects
+  const sampleProjects = [
     {
       userId,
-      title: 'Design the new landing page',
-      description: 'Create comprehensive mockups for the new landing page in Figma. The design should focus on user experience and conversion optimization.',
-      label: 'Design',
+      name: 'E-commerce Platform',
+      description: 'Full-stack e-commerce platform with payment integration and inventory management',
+      color: '#3b82f6',
+    },
+    {
+      userId,
+      name: 'Personal Finance App',
+      description: 'Personal finance tracking app with budgeting and expense analysis features',
+      color: '#10b981',
+    },
+    {
+      userId,
+      name: 'Task Management System',
+      description: 'Complete project management tool with team collaboration and real-time updates',
+      color: '#f59e0b',
+    },
+    {
+      userId,
+      name: 'Learning Platform',
+      description: 'Online learning platform with video streaming and progress tracking',
+      color: '#8b5cf6',
+    },
+    {
+      userId,
+      name: 'Social Media Dashboard',
+      description: 'Social media analytics and management dashboard for businesses',
+      color: '#ec4899',
+    },
+  ];
+
+  const insertedProjects = await db
+    .insert(projectsSchema)
+    .values(sampleProjects)
+    .returning();
+
+  const [ecommerceProject, financeProject, taskProject, learningProject, socialProject] = insertedProjects;
+  const sampleTasks = [
+    // E-commerce Platform tasks
+    {
+      userId,
+      projectId: ecommerceProject?.id,
+      title: 'Design product catalog interface',
+      description: 'Create comprehensive product catalog with advanced filtering, search, and sorting capabilities. Include product comparison and wishlist features.',
+      label: 'Frontend',
       status: 'in-progress' as const,
       urgency: 'high' as const,
       deadline: new Date('2025-01-15'),
     },
     {
       userId,
-      title: 'Implement user authentication system',
-      description: 'Set up a complete authentication system with JWT. This includes implementing sign-in, sign-up, password reset, and session management.',
+      projectId: ecommerceProject?.id,
+      title: 'Implement payment gateway integration',
+      description: 'Integrate Stripe and PayPal payment systems with secure checkout flow. Include support for multiple currencies and payment methods.',
       label: 'Backend',
-      status: 'in-progress' as const,
+      status: 'todo' as const,
       urgency: 'critical' as const,
       deadline: new Date('2025-01-20'),
     },
     {
       userId,
-      title: 'Deploy application to production',
-      description: 'Configure and deploy the application to production with proper CI/CD pipeline setup. This includes setting up environment variables and monitoring.',
-      label: 'DevOps',
+      projectId: ecommerceProject?.id,
+      title: 'Set up inventory management system',
+      description: 'Build real-time inventory tracking with low-stock alerts, automated reordering, and supplier management.',
+      label: 'Backend',
       status: 'done' as const,
       urgency: 'medium' as const,
       deadline: new Date('2024-12-10'),
     },
+
+    // Personal Finance App tasks
     {
       userId,
-      title: 'Write comprehensive API documentation',
-      description: 'Create detailed API documentation using OpenAPI/Swagger. Include examples, error codes, and authentication requirements for all endpoints.',
-      label: 'Documentation',
-      status: 'todo' as const,
-      urgency: 'low' as const,
-      deadline: new Date('2025-02-01'),
-    },
-    {
-      userId,
-      title: 'Implement real-time notifications',
-      description: 'Add WebSocket support for real-time notifications. Users should receive instant updates for task assignments, comments, and status changes.',
-      label: 'Feature',
-      status: 'todo' as const,
-      urgency: 'medium' as const,
-      deadline: new Date('2025-01-30'),
-    },
-    {
-      userId,
-      title: 'Set up automated testing pipeline',
-      description: 'Configure comprehensive testing including unit tests, integration tests, and E2E tests. Set up GitHub Actions for automated testing on PRs.',
-      label: 'Testing',
+      projectId: financeProject?.id,
+      title: 'Build expense tracking dashboard',
+      description: 'Create interactive dashboard with charts and analytics for expense tracking. Include category-wise breakdowns and spending trends.',
+      label: 'Frontend',
       status: 'in-progress' as const,
       urgency: 'high' as const,
       deadline: new Date('2025-01-25'),
     },
     {
       userId,
-      title: 'Database performance optimization',
-      description: 'Analyze and optimize database queries, add proper indexes, and implement caching strategies to improve application performance.',
-      label: 'Performance',
+      projectId: financeProject?.id,
+      title: 'Implement budgeting system',
+      description: 'Add budget creation, monitoring, and alert system. Include goal setting and progress tracking for financial objectives.',
+      label: 'Feature',
+      status: 'todo' as const,
+      urgency: 'medium' as const,
+      deadline: new Date('2025-02-01'),
+    },
+    {
+      userId,
+      projectId: financeProject?.id,
+      title: 'Bank account synchronization',
+      description: 'Integrate with banking APIs for automatic transaction import and account balance syncing.',
+      label: 'Integration',
+      status: 'cancelled' as const,
+      urgency: 'low' as const,
+      deadline: new Date('2025-03-01'),
+    },
+
+    // Task Management System tasks
+    {
+      userId,
+      projectId: taskProject?.id,
+      title: 'Real-time collaboration features',
+      description: 'Implement WebSocket-based real-time updates for team collaboration. Include live editing, comments, and activity feeds.',
+      label: 'Backend',
+      status: 'in-progress' as const,
+      urgency: 'high' as const,
+      deadline: new Date('2025-01-30'),
+    },
+    {
+      userId,
+      projectId: taskProject?.id,
+      title: 'Advanced project analytics',
+      description: 'Build comprehensive analytics dashboard with project insights, team performance metrics, and productivity reports.',
+      label: 'Analytics',
       status: 'todo' as const,
       urgency: 'medium' as const,
       deadline: new Date('2025-02-15'),
     },
+
+    // Learning Platform tasks
     {
       userId,
-      title: 'Mobile responsive design',
-      description: 'Ensure the application works perfectly on mobile devices. Test and optimize for various screen sizes and touch interactions.',
-      label: 'Frontend',
+      projectId: learningProject?.id,
+      title: 'Video streaming infrastructure',
+      description: 'Set up adaptive video streaming with CDN integration. Include subtitle support and video quality selection.',
+      label: 'Infrastructure',
       status: 'done' as const,
-      urgency: 'high' as const,
+      urgency: 'critical' as const,
       deadline: new Date('2024-12-20'),
     },
     {
       userId,
-      title: 'Security audit and penetration testing',
-      description: 'Conduct thorough security audit, implement security headers, and perform penetration testing to identify vulnerabilities.',
-      label: 'Security',
-      status: 'cancelled' as const,
-      urgency: 'critical' as const,
-      deadline: new Date('2025-01-10'),
+      projectId: learningProject?.id,
+      title: 'Student progress tracking system',
+      description: 'Build comprehensive progress tracking with completion certificates, skill assessments, and learning path recommendations.',
+      label: 'Feature',
+      status: 'todo' as const,
+      urgency: 'medium' as const,
+      deadline: new Date('2025-02-10'),
+    },
+
+    // Social Media Dashboard tasks
+    {
+      userId,
+      projectId: socialProject?.id,
+      title: 'Multi-platform API integration',
+      description: 'Integrate with Facebook, Twitter, Instagram, and LinkedIn APIs for unified social media management.',
+      label: 'Integration',
+      status: 'in-progress' as const,
+      urgency: 'high' as const,
+      deadline: new Date('2025-01-18'),
     },
     {
       userId,
-      title: 'User onboarding flow',
-      description: 'Design and implement an intuitive onboarding process for new users. Include guided tours, tooltips, and progressive disclosure.',
-      label: 'UX',
+      projectId: socialProject?.id,
+      title: 'Content scheduling system',
+      description: 'Build advanced content scheduling with optimal posting time suggestions and bulk upload capabilities.',
+      label: 'Feature',
+      status: 'todo' as const,
+      urgency: 'medium' as const,
+      deadline: new Date('2025-02-05'),
+    },
+
+    // Tasks without projects (optional)
+    {
+      userId,
+      projectId: null,
+      title: 'Review team performance metrics',
+      description: 'Conduct quarterly review of team performance and productivity metrics across all projects.',
+      label: 'Management',
       status: 'todo' as const,
       urgency: 'low' as const,
-      deadline: new Date('2025-03-01'),
+      deadline: new Date('2025-01-31'),
+    },
+    {
+      userId,
+      projectId: null,
+      title: 'Update development environment',
+      description: 'Upgrade development tools, IDEs, and local environment setup for better productivity.',
+      label: 'DevOps',
+      status: 'done' as const,
+      urgency: 'low' as const,
+      deadline: new Date('2024-12-15'),
     },
   ];
 
@@ -102,32 +203,37 @@ export async function seedSampleTasks(userId: number) {
 
   // Create sub-tasks for some of the main tasks to showcase the feature
   const subTasksData = [
-    // Sub-tasks for "Design the new landing page" (task 1)
-    { taskId: insertedTasks[0].id, title: 'Research competitor landing pages', completed: true, order: 1 },
-    { taskId: insertedTasks[0].id, title: 'Create wireframes in Figma', completed: true, order: 2 },
-    { taskId: insertedTasks[0].id, title: 'Design hero section', completed: false, order: 3 },
-    { taskId: insertedTasks[0].id, title: 'Design features section', completed: false, order: 4 },
-    { taskId: insertedTasks[0].id, title: 'Create mobile mockups', completed: false, order: 5 },
+    // Sub-tasks for "Design product catalog interface" (task 0)
+    { taskId: insertedTasks[0]?.id, title: 'Research competitor e-commerce sites', completed: true, order: 1 },
+    { taskId: insertedTasks[0]?.id, title: 'Create wireframes for product listing', completed: true, order: 2 },
+    { taskId: insertedTasks[0]?.id, title: 'Design filtering and search UI', completed: false, order: 3 },
+    { taskId: insertedTasks[0]?.id, title: 'Implement product comparison feature', completed: false, order: 4 },
+    { taskId: insertedTasks[0]?.id, title: 'Add wishlist functionality', completed: false, order: 5 },
 
-    // Sub-tasks for "Implement user authentication system" (task 2)
-    { taskId: insertedTasks[1].id, title: 'Set up JWT middleware', completed: true, order: 1 },
-    { taskId: insertedTasks[1].id, title: 'Create sign-up API endpoint', completed: true, order: 2 },
-    { taskId: insertedTasks[1].id, title: 'Create sign-in API endpoint', completed: false, order: 3 },
-    { taskId: insertedTasks[1].id, title: 'Implement password hashing', completed: false, order: 4 },
-    { taskId: insertedTasks[1].id, title: 'Add session management', completed: false, order: 5 },
-    { taskId: insertedTasks[1].id, title: 'Create protected route middleware', completed: false, order: 6 },
+    // Sub-tasks for "Implement payment gateway integration" (task 1)
+    { taskId: insertedTasks[1]?.id, title: 'Set up Stripe API integration', completed: false, order: 1 },
+    { taskId: insertedTasks[1]?.id, title: 'Implement PayPal checkout flow', completed: false, order: 2 },
+    { taskId: insertedTasks[1]?.id, title: 'Add currency conversion support', completed: false, order: 3 },
+    { taskId: insertedTasks[1]?.id, title: 'Implement secure payment validation', completed: false, order: 4 },
+    { taskId: insertedTasks[1]?.id, title: 'Test payment processing workflow', completed: false, order: 5 },
 
-    // Sub-tasks for "Set up automated testing pipeline" (task 6)
-    { taskId: insertedTasks[5].id, title: 'Configure Vitest for unit tests', completed: true, order: 1 },
-    { taskId: insertedTasks[5].id, title: 'Write API endpoint tests', completed: false, order: 2 },
-    { taskId: insertedTasks[5].id, title: 'Set up Playwright for E2E tests', completed: false, order: 3 },
-    { taskId: insertedTasks[5].id, title: 'Configure GitHub Actions workflow', completed: false, order: 4 },
+    // Sub-tasks for "Build expense tracking dashboard" (task 3)
+    { taskId: insertedTasks[3]?.id, title: 'Create expense entry form', completed: true, order: 1 },
+    { taskId: insertedTasks[3]?.id, title: 'Design category management system', completed: true, order: 2 },
+    { taskId: insertedTasks[3]?.id, title: 'Implement chart visualizations', completed: false, order: 3 },
+    { taskId: insertedTasks[3]?.id, title: 'Add expense filtering and search', completed: false, order: 4 },
 
-    // Sub-tasks for "User onboarding flow" (task 10)
-    { taskId: insertedTasks[9].id, title: 'Design onboarding screens', completed: false, order: 1 },
-    { taskId: insertedTasks[9].id, title: 'Implement guided tour component', completed: false, order: 2 },
-    { taskId: insertedTasks[9].id, title: 'Add interactive tooltips', completed: false, order: 3 },
-    { taskId: insertedTasks[9].id, title: 'Create progress tracking', completed: false, order: 4 },
+    // Sub-tasks for "Real-time collaboration features" (task 6)
+    { taskId: insertedTasks[6]?.id, title: 'Set up WebSocket server', completed: true, order: 1 },
+    { taskId: insertedTasks[6]?.id, title: 'Implement real-time task updates', completed: false, order: 2 },
+    { taskId: insertedTasks[6]?.id, title: 'Add live comment system', completed: false, order: 3 },
+    { taskId: insertedTasks[6]?.id, title: 'Create activity feed component', completed: false, order: 4 },
+
+    // Sub-tasks for "Multi-platform API integration" (task 10)
+    { taskId: insertedTasks[10]?.id, title: 'Integrate Facebook Graph API', completed: true, order: 1 },
+    { taskId: insertedTasks[10]?.id, title: 'Connect Twitter API v2', completed: false, order: 2 },
+    { taskId: insertedTasks[10]?.id, title: 'Implement Instagram Basic Display API', completed: false, order: 3 },
+    { taskId: insertedTasks[10]?.id, title: 'Add LinkedIn API integration', completed: false, order: 4 },
   ];
 
   await db

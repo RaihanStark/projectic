@@ -1,7 +1,7 @@
 'use client';
 
+import type { DropdownOption } from '@/components/Dropdown';
 import type { Task } from '@/utils/taskUtils';
-import Link from 'next/link';
 import {
   AlertTriangle,
   CheckCircle,
@@ -11,15 +11,16 @@ import {
   Trash,
   XCircle,
 } from 'lucide-react';
-import { createPortal } from 'react-dom';
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { cn } from '@/utils/cn';
-import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
-import { truncateMarkdown } from '@/utils/markdown';
-import Dropdown, { type DropdownOption } from '@/components/Dropdown';
+import { createPortal } from 'react-dom';
+import toast from 'react-hot-toast';
+import Dropdown from '@/components/Dropdown';
 import TaskListSkeleton from '@/components/TaskListSkeleton';
 import { useTaskStore } from '@/stores/taskStore';
-import toast from 'react-hot-toast';
+import { cn } from '@/utils/cn';
+import { truncateMarkdown } from '@/utils/markdown';
+import { bulkDeleteTasks, bulkUpdateTaskStatus, deleteTask, fetchTasks, formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
 
 // Portal-based hover tooltip component
 const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
@@ -116,7 +117,7 @@ export default function Dashboard() {
     deleteTask: deleteTaskFromStore,
     deleteTasks: deleteTasksFromStore,
     updateTask,
-    getTaskCount
+    getTaskCount,
   } = useTaskStore();
   const [activeTab, setActiveTab] = useState<'all' | 'todo' | 'in-progress' | 'done' | 'cancelled'>('all');
   const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
@@ -155,7 +156,7 @@ export default function Dashboard() {
       setLoading(true);
       const fetchedTasks = await fetchTasks();
       setTasks(fetchedTasks); // This will automatically calculate subtask counts in the store
-      
+
       // @ts-expect-error: Accessing updateTaskCount on window for task count updates
       if (window.updateTaskCount) {
         // @ts-expect-error: Accessing updateTaskCount on window for task count updates
@@ -178,7 +179,7 @@ export default function Dashboard() {
   useEffect(() => {
     // @ts-expect-error: Adding refreshTasks to window for dashboard refresh
     window.refreshTasks = loadTasks;
-    
+
     return () => {
       // @ts-expect-error: Removing refreshTasks from window
       delete window.refreshTasks;
@@ -220,18 +221,26 @@ export default function Dashboard() {
 
   // Filter and sort tasks based on active tab and urgency filter
   const filteredTasks = tasks
-    .filter(task => {
+    .filter((task) => {
       // Filter by status tab
-      if (activeTab !== 'all' && task.status !== activeTab) return false;
+      if (activeTab !== 'all' && task.status !== activeTab) {
+        return false;
+      }
       // Filter by urgency
-      if (urgencyFilter !== 'all' && task.urgency !== urgencyFilter) return false;
+      if (urgencyFilter !== 'all' && task.urgency !== urgencyFilter) {
+        return false;
+      }
       return true;
     })
     .sort((a, b) => {
       // For "All Tasks" tab, move done tasks to bottom
       if (activeTab === 'all') {
-        if (a.status === 'done' && b.status !== 'done') return 1;
-        if (a.status !== 'done' && b.status === 'done') return -1;
+        if (a.status === 'done' && b.status !== 'done') {
+          return 1;
+        }
+        if (a.status !== 'done' && b.status === 'done') {
+          return -1;
+        }
       }
       // Keep original order for same status
       return 0;
@@ -239,11 +248,11 @@ export default function Dashboard() {
 
   // Get counts for each tab
   const tabCounts = {
-    all: tasks.length,
-    todo: tasks.filter(t => t.status === 'todo').length,
+    'all': tasks.length,
+    'todo': tasks.filter(t => t.status === 'todo').length,
     'in-progress': tasks.filter(t => t.status === 'in-progress').length,
-    done: tasks.filter(t => t.status === 'done').length,
-    cancelled: tasks.filter(t => t.status === 'cancelled').length,
+    'done': tasks.filter(t => t.status === 'done').length,
+    'cancelled': tasks.filter(t => t.status === 'cancelled').length,
   };
 
   // Bulk action handlers
@@ -270,7 +279,7 @@ export default function Dashboard() {
     const taskTitles = tasks
       .filter(task => taskIds.includes(task.id))
       .map(task => task.title);
-    
+
     setBulkDeleteConfirm({
       isOpen: true,
       taskIds,
@@ -306,16 +315,16 @@ export default function Dashboard() {
 
   const handleBulkStatusUpdate = async (newStatus: string) => {
     const taskIds = Array.from(selectedTasks);
-    
+
     setBulkUpdateLoading(true);
     try {
       const updatedTasks = await bulkUpdateTaskStatus(taskIds, newStatus);
-      
+
       // Update the tasks in store
-      updatedTasks.forEach(updatedTask => {
+      updatedTasks.forEach((updatedTask) => {
         updateTask(updatedTask.id, updatedTask);
       });
-      
+
       // Clear selections after successful update
       setSelectedTasks(new Set());
       toast.success(`${taskIds.length} task${taskIds.length > 1 ? 's' : ''} updated to ${getStatusDisplayName(newStatus as Task['status'])}`);
@@ -376,7 +385,7 @@ export default function Dashboard() {
             <input
               type="checkbox"
               checked={filteredTasks.length > 0 && selectedTasks.size === filteredTasks.length}
-              onChange={(e) => handleSelectAll(e.target.checked)}
+              onChange={e => handleSelectAll(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             {selectedTasks.size > 0 && (
@@ -412,7 +421,12 @@ export default function Dashboard() {
           {/* Right side - Selection Count OR Urgency Filter */}
           {selectedTasks.size > 0 ? (
             <div className="text-sm text-gray-600">
-              {selectedTasks.size} of {filteredTasks.length} selected
+              {selectedTasks.size}
+              {' '}
+              of
+              {filteredTasks.length}
+              {' '}
+              selected
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -440,7 +454,7 @@ export default function Dashboard() {
               { key: 'in-progress', label: 'In Progress', count: tabCounts['in-progress'] },
               { key: 'done', label: 'Done', count: tabCounts.done },
               { key: 'cancelled', label: 'Cancelled', count: tabCounts.cancelled },
-            ].map((tab) => (
+            ].map(tab => (
               <button
                 key={tab.key}
                 onClick={() => {
@@ -452,7 +466,7 @@ export default function Dashboard() {
                   'relative flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2',
                   activeTab === tab.key
                     ? 'border-blue-500 text-blue-600 bg-blue-50/50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                 )}
               >
                 <span>{tab.label}</span>
@@ -461,8 +475,9 @@ export default function Dashboard() {
                     'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
                     activeTab === tab.key
                       ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-600'
-                  )}>
+                      : 'bg-gray-100 text-gray-600',
+                  )}
+                  >
                     {tab.count}
                   </span>
                 )}
@@ -473,151 +488,181 @@ export default function Dashboard() {
 
         {/* Tasks List */}
         <ul className="divide-y divide-gray-200">
-        {filteredTasks.length === 0 ? (
-          <li className="p-8 text-center text-gray-500">
-            <div className="text-sm">
-              {activeTab === 'all' 
-                ? 'No tasks found'
-                : `No ${activeTab.replace('-', ' ')} tasks`
-              }
-            </div>
-          </li>
-        ) : (
-          filteredTasks.map(task => (
-          <li
-            key={task.id}
-            className={cn(
-              "group p-4 transition-colors hover:bg-gray-50",
-              task.status === 'done' && "opacity-60 bg-gray-50/50"
-            )}
-          >
-            <div className="flex items-start gap-3 w-full">
-              {/* Left side - Checkbox, Star, and Task Info */}
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                <div className="flex items-center gap-3 mt-1">
-                  <input
-                    type="checkbox"
-                    checked={selectedTasks.has(task.id)}
-                    onChange={(e) => handleSelectTask(task.id, e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
-                  />
-                </div>
+          {filteredTasks.length === 0 ? (
+            <li className="p-8 text-center text-gray-500">
+              <div className="text-sm">
+                {activeTab === 'all'
+                  ? 'No tasks found'
+                  : `No ${activeTab.replace('-', ' ')} tasks`}
+              </div>
+            </li>
+          ) : (
+            filteredTasks.map(task => (
+              <li
+                key={task.id}
+                className={cn(
+                  'group p-4 transition-colors hover:bg-gray-50',
+                  task.status === 'done' && 'opacity-60 bg-gray-50/50',
+                )}
+              >
+                <div className="flex items-start gap-3 w-full">
+                  {/* Left side - Checkbox and Task Info */}
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mt-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedTasks.has(task.id)}
+                        onChange={e => handleSelectTask(task.id, e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                      />
+                    </div>
 
-                {/* Task Content */}
-                <Link
-                  href={`/dashboard/task/${task.id}`}
-                  className="flex-1 min-w-0 hover:bg-gray-100 rounded-lg p-2 -m-2 transition-colors"
-                >
-                  <div className="space-y-1">
-                    <p className={cn(
-                      "font-medium line-clamp-1",
-                      task.status === 'done' 
-                        ? "text-gray-500 line-through" 
-                        : "text-gray-900"
-                    )}>
-                      {task.title}
-                    </p>
-                    <p className={cn(
-                      "text-sm line-clamp-2",
-                      task.status === 'done' 
-                        ? "text-gray-400" 
-                        : "text-gray-500"
-                    )}>
-                      {task.description ? truncateMarkdown(task.description, 120) : 'No description'}
-                    </p>
-                    {/* Sub-task progress indicator */}
-                    {subTaskCounts[task.id] && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <CheckCircle className={cn(
-                          "h-3 w-3",
-                          task.status === 'done' ? "text-gray-400" : "text-green-500"
-                        )} />
-                        <div className="flex items-center gap-2">
-                          <div className={cn(
-                            "w-16 h-1.5 rounded-full",
-                            task.status === 'done' ? "bg-gray-200" : "bg-gray-200"
-                          )}>
-                            <div 
-                              className={cn(
-                                "h-1.5 rounded-full transition-all duration-300",
-                                task.status === 'done' ? "bg-gray-400" : "bg-green-500"
+                    {/* Task Content */}
+                    <Link
+                      href={`/dashboard/task/${task.id}`}
+                      className="flex-1 min-w-0 hover:bg-gray-100 rounded-lg p-2 -m-2 transition-colors"
+                    >
+                      <div className="space-y-1">
+                        <p className={cn(
+                          'font-medium line-clamp-1',
+                          task.status === 'done'
+                            ? 'text-gray-500 line-through'
+                            : 'text-gray-900',
+                        )}
+                        >
+                          {task.title}
+                        </p>
+
+                        <p className={cn(
+                          'text-sm line-clamp-2',
+                          task.status === 'done'
+                            ? 'text-gray-400'
+                            : 'text-gray-500',
+                        )}
+                        >
+                          {task.description ? truncateMarkdown(task.description, 120) : 'No description'}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          {/* Sub-task progress indicator */}
+                          {subTaskCounts[task.id] && (
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className={cn(
+                                'h-3 w-3',
+                                task.status === 'done' ? 'text-gray-400' : 'text-green-500',
                               )}
-                              style={{ 
-                                width: `${subTaskCounts[task.id]?.total > 0 ? (subTaskCounts[task.id].completed / subTaskCounts[task.id].total) * 100 : 0}%` 
-                              }}
-                            ></div>
-                          </div>
-                          <span className={cn(
-                            "text-xs font-medium",
-                            task.status === 'done' ? "text-gray-400" : "text-gray-600"
-                          )}>
-                            {subTaskCounts[task.id]?.completed}/{subTaskCounts[task.id]?.total} subtasks
-                          </span>
+                              />
+                              <div className="flex items-center gap-2">
+                                <div className={cn(
+                                  'w-16 h-1.5 rounded-full',
+                                  task.status === 'done' ? 'bg-gray-200' : 'bg-gray-200',
+                                )}
+                                >
+                                  <div
+                                    className={cn(
+                                      'h-1.5 rounded-full transition-all duration-300',
+                                      task.status === 'done' ? 'bg-gray-400' : 'bg-green-500',
+                                    )}
+                                    style={{
+                                      width: `${subTaskCounts[task.id]?.total > 0 ? (subTaskCounts[task.id].completed / subTaskCounts[task.id].total) * 100 : 0}%`,
+                                    }}
+                                  >
+                                  </div>
+                                </div>
+                                <span className={cn(
+                                  'text-xs font-medium',
+                                  task.status === 'done' ? 'text-gray-400' : 'text-gray-600',
+                                )}
+                                >
+                                  {subTaskCounts[task.id]?.completed}
+                                  /
+                                  {subTaskCounts[task.id]?.total}
+                                  {' '}
+                                  subtasks
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Project Badge */}
+                          {task.project && (
+                            <div className="flex items-center gap-2">
+                              <Circle
+                                className="h-3 w-3"
+                                style={{
+                                  color: task.project.color,
+                                  fill: task.project.color,
+                                }}
+                              />
+                              <span className="text-xs text-gray-600 font-medium">
+                                {task.project.name}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
+                    </Link>
                   </div>
-                </Link>
-              </div>
 
-              {/* Right side - Actions and Status */}
-              <div className="flex items-center gap-3 flex-shrink-0">
-                {/* Action buttons */}
-                <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Tooltip text="Delete task">
-                    <button
-                      type="button"
-                      className="rounded-md p-2 hover:bg-gray-200"
-                      onClick={() => handleDeleteTask(task.id, task.title)}
-                    >
-                      <Trash className="h-4 w-4 text-gray-600" />
-                    </button>
-                  </Tooltip>
-                </div>
+                  {/* Right side - Actions and Status */}
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Tooltip text="Delete task">
+                        <button
+                          type="button"
+                          className="rounded-md p-2 hover:bg-gray-200"
+                          onClick={() => handleDeleteTask(task.id, task.title)}
+                        >
+                          <Trash className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </Tooltip>
+                    </div>
 
-                {/* Status badges */}
-                <div className="flex gap-2">
-                  <span
-                    className={cn(
-                      'rounded-full px-2 py-1 text-xs font-medium whitespace-nowrap',
-                      statusClasses[task.status],
-                    )}
-                  >
-                    {getStatusDisplayName(task.status)}
-                  </span>
-                  <span
-                    className={cn(
-                      'rounded-full px-2 py-1 text-xs font-medium whitespace-nowrap',
-                      priorityClasses[task.urgency],
-                    )}
-                  >
-                    {getUrgencyDisplayName(task.urgency)}
-                  </span>
-                </div>
+                    {/* Status badges */}
+                    <div className="flex gap-2">
+                      <span
+                        className={cn(
+                          'rounded-full px-2 py-1 text-xs font-medium whitespace-nowrap',
+                          statusClasses[task.status],
+                        )}
+                      >
+                        {getStatusDisplayName(task.status)}
+                      </span>
+                      <span
+                        className={cn(
+                          'rounded-full px-2 py-1 text-xs font-medium whitespace-nowrap',
+                          priorityClasses[task.urgency],
+                        )}
+                      >
+                        {getUrgencyDisplayName(task.urgency)}
+                      </span>
+                    </div>
 
-                {/* Date and more menu */}
-                <div className="flex items-center gap-2">
-                  <p className={cn(
-                    "text-sm whitespace-nowrap",
-                    task.status === 'done' ? "text-gray-400" : "text-gray-500"
-                  )}>
-                    {formatDate(task.deadline)}
-                  </p>
-                  <button
-                    type="button"
-                    className="rounded-md p-2 hover:bg-gray-200"
-                  >
-                    <MoreVertical className={cn(
-                      "h-4 w-4",
-                      task.status === 'done' ? "text-gray-400" : "text-gray-600"
-                    )} />
-                  </button>
+                    {/* Date and more menu */}
+                    <div className="flex items-center gap-2">
+                      <p className={cn(
+                        'text-sm whitespace-nowrap',
+                        task.status === 'done' ? 'text-gray-400' : 'text-gray-500',
+                      )}
+                      >
+                        {formatDate(task.deadline)}
+                      </p>
+                      <button
+                        type="button"
+                        className="rounded-md p-2 hover:bg-gray-200"
+                      >
+                        <MoreVertical className={cn(
+                          'h-4 w-4',
+                          task.status === 'done' ? 'text-gray-400' : 'text-gray-600',
+                        )}
+                        />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </li>
-          ))
-        )}
+              </li>
+            ))
+          )}
         </ul>
       </div>
 
@@ -658,7 +703,12 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Delete {bulkDeleteConfirm.taskIds.length} Task{bulkDeleteConfirm.taskIds.length > 1 ? 's' : ''}
+              Delete
+              {' '}
+              {bulkDeleteConfirm.taskIds.length}
+              {' '}
+              Task
+              {bulkDeleteConfirm.taskIds.length > 1 ? 's' : ''}
             </h3>
             <div className="text-gray-600 mb-6">
               <p className="mb-3">Are you sure you want to delete these tasks? This action cannot be undone.</p>
@@ -686,7 +736,12 @@ export default function Dashboard() {
                 onClick={confirmBulkDelete}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                Delete {bulkDeleteConfirm.taskIds.length} Task{bulkDeleteConfirm.taskIds.length > 1 ? 's' : ''}
+                Delete
+                {' '}
+                {bulkDeleteConfirm.taskIds.length}
+                {' '}
+                Task
+                {bulkDeleteConfirm.taskIds.length > 1 ? 's' : ''}
               </button>
             </div>
           </div>

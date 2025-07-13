@@ -24,7 +24,7 @@ export async function PUT(request: NextRequest) {
       .from(tasksSchema)
       .where(and(
         inArray(tasksSchema.id, taskIds),
-        eq(tasksSchema.userId, userId)
+        eq(tasksSchema.userId, userId),
       ));
 
     if (existingTasks.length !== taskIds.length) {
@@ -40,14 +40,14 @@ export async function PUT(request: NextRequest) {
       })
       .where(and(
         inArray(tasksSchema.id, taskIds),
-        eq(tasksSchema.userId, userId)
+        eq(tasksSchema.userId, userId),
       ))
       .returning();
 
-    return createSuccessResponse({ 
+    return createSuccessResponse({
       message: `Successfully updated ${taskIds.length} tasks to ${status}`,
       updatedCount: taskIds.length,
-      updatedTasks
+      updatedTasks,
     });
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {

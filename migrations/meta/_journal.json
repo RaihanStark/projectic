@@ -15,6 +15,13 @@
       "when": 1750564630124,
       "tag": "0001_zippy_jamie_braddock",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1750683134179,
+      "tag": "0002_fat_ghost_rider",
+      "breakpoints": true
     }
   ]
 }

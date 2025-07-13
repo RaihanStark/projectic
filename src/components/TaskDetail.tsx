@@ -1,6 +1,7 @@
 'use client';
 
-import type { UpdateTaskData, SubTask, CreateSubTaskData, UpdateSubTaskData } from '@/utils/taskUtils';
+import type { DropdownOption } from './Dropdown';
+import type { SubTask, UpdateTaskData } from '@/utils/taskUtils';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -8,21 +9,21 @@ import {
   CheckCircle,
   Circle,
   Clock,
-  Plus,
   Pencil,
+  Plus,
   Tag,
   Trash2,
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import Dropdown, { type DropdownOption } from './Dropdown';
-import MarkdownEditor from './MarkdownEditor';
-import { useTaskStore } from '@/stores/taskStore';
-
-import { useState, useEffect, useCallback } from 'react';
-import { cn } from '@/utils/cn';
-import { updateTask, fetchSubTasks, createSubTask, updateSubTask, deleteSubTask } from '@/utils/taskUtils';
+import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+
+import { useTaskStore } from '@/stores/taskStore';
+import { cn } from '@/utils/cn';
+import { createSubTask, deleteSubTask, fetchSubTasks, updateSubTask, updateTask } from '@/utils/taskUtils';
+import Dropdown from './Dropdown';
+import MarkdownEditor from './MarkdownEditor';
 
 type TaskDetailProps = {
   id: number;
@@ -91,12 +92,12 @@ const urgencyConfig = {
 const TaskDetail = (props: TaskDetailProps) => {
   // Zustand store
   const { updateTask: updateTaskInStore } = useTaskStore();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [task, setTask] = useState(props);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Sub-tasks state
   const [subTasks, setSubTasks] = useState<SubTask[]>([]);
   const [newSubTaskTitle, setNewSubTaskTitle] = useState('');
@@ -140,31 +141,33 @@ const TaskDetail = (props: TaskDetailProps) => {
   // Sub-task functions
   const handleSubTaskToggle = async (id: number) => {
     const subTask = subTasks.find(st => st.id === id);
-    if (!subTask) return;
+    if (!subTask) {
+      return;
+    }
 
     const newCompletedState = !subTask.completed;
 
     // Optimistic update - immediately update UI
-    const updatedSubTasks = subTasks.map(st => 
-      st.id === id ? { ...st, completed: newCompletedState } : st
+    const updatedSubTasks = subTasks.map(st =>
+      st.id === id ? { ...st, completed: newCompletedState } : st,
     );
     setSubTasks(updatedSubTasks);
-    
+
     // Update task in store with new subtasks
     updateTaskInStore(task.id, { ...task, subtasks: updatedSubTasks });
-    
+
     toast.success(`Sub-task ${newCompletedState ? 'completed' : 'marked as incomplete'}`);
 
     try {
-      await updateSubTask(task.id, id, { 
-        completed: newCompletedState 
+      await updateSubTask(task.id, id, {
+        completed: newCompletedState,
       });
     } catch (err) {
       // Rollback optimistic update on error
-      setSubTasks(prev => prev.map(st => 
-        st.id === id ? { ...st, completed: !newCompletedState } : st
+      setSubTasks(prev => prev.map(st =>
+        st.id === id ? { ...st, completed: !newCompletedState } : st,
       ));
-      
+
       // Rollback task in store
       updateTaskInStore(task.id, { ...task, subtasks: subTasks });
 
@@ -175,19 +178,21 @@ const TaskDetail = (props: TaskDetailProps) => {
   };
 
   const handleAddSubTask = async () => {
-    if (!newSubTaskTitle.trim()) return;
+    if (!newSubTaskTitle.trim()) {
+      return;
+    }
 
     try {
-      const newSubTask = await createSubTask(task.id, { 
-        title: newSubTaskTitle.trim() 
+      const newSubTask = await createSubTask(task.id, {
+        title: newSubTaskTitle.trim(),
       });
       const updatedSubTasks = [...subTasks, newSubTask];
       setSubTasks(updatedSubTasks);
       setNewSubTaskTitle('');
-      
+
       // Update task in store with new subtasks
       updateTaskInStore(task.id, { ...task, subtasks: updatedSubTasks });
-      
+
       toast.success('Sub-task added successfully');
     } catch (err) {
       console.error('Error creating sub-task:', err);
@@ -199,15 +204,17 @@ const TaskDetail = (props: TaskDetailProps) => {
   const handleDeleteSubTask = async (id: number) => {
     // Store the sub-task for potential rollback
     const subTaskToDelete = subTasks.find(st => st.id === id);
-    if (!subTaskToDelete) return;
+    if (!subTaskToDelete) {
+      return;
+    }
 
     // Optimistic update - immediately remove from UI
     const updatedSubTasks = subTasks.filter(subTask => subTask.id !== id);
     setSubTasks(updatedSubTasks);
-    
+
     // Update task in store with new subtasks
     updateTaskInStore(task.id, { ...task, subtasks: updatedSubTasks });
-    
+
     toast.success('Sub-task deleted successfully');
 
     try {
@@ -216,14 +223,14 @@ const TaskDetail = (props: TaskDetailProps) => {
       // Rollback on error - restore the deleted sub-task
       const newSubTasks = [...subTasks.filter(st => st.id !== id), subTaskToDelete];
       // Re-sort by creation date to maintain original order
-      const sortedSubTasks = newSubTasks.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      const sortedSubTasks = newSubTasks.sort((a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
       setSubTasks(sortedSubTasks);
-      
+
       // Rollback task in store
       updateTaskInStore(task.id, { ...task, subtasks: sortedSubTasks });
-      
+
       console.error('Error deleting sub-task:', err);
       setError('Failed to delete sub-task');
       toast.error('Failed to delete sub-task. Restored sub-task.');
@@ -340,17 +347,19 @@ const TaskDetail = (props: TaskDetailProps) => {
                         disabled={loading}
                         className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {loading ? (
-                          <>
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="h-4 w-4" />
-                            Save Changes
-                          </>
-                        )}
+                        {loading
+                          ? (
+                              <>
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                Saving...
+                              </>
+                            )
+                          : (
+                              <>
+                                <CheckCircle className="h-4 w-4" />
+                                Save Changes
+                              </>
+                            )}
                       </button>
                     </>
                   )
@@ -380,7 +389,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                   placeholder="Enter task title..."
                   className={cn(
                     'w-full border-0 bg-transparent p-0 text-4xl font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0',
-                    loading && 'opacity-50'
+                    loading && 'opacity-50',
                   )}
                 />
               )
@@ -407,7 +416,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                 ? (
                     <MarkdownEditor
                       value={description}
-                      onChange={(value) => setTask(prev => ({ ...prev, description: value }))}
+                      onChange={value => setTask(prev => ({ ...prev, description: value }))}
                       placeholder="Add a description for this task..."
                       disabled={loading}
                       height={300}
@@ -442,20 +451,27 @@ const TaskDetail = (props: TaskDetailProps) => {
                   </h2>
                   {totalSubTasks > 0 && (
                     <span className="text-sm text-gray-500">
-                      ({completedSubTasks}/{totalSubTasks} completed)
+                      (
+                      {completedSubTasks}
+                      /
+                      {totalSubTasks}
+                      {' '}
+                      completed)
                     </span>
                   )}
                 </div>
                 {totalSubTasks > 0 && (
                   <div className="flex items-center gap-2">
                     <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-green-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${(completedSubTasks / totalSubTasks) * 100}%` }}
-                      ></div>
+                      >
+                      </div>
                     </div>
                     <span className="text-xs text-gray-500 font-medium">
-                      {Math.round((completedSubTasks / totalSubTasks) * 100)}%
+                      {Math.round((completedSubTasks / totalSubTasks) * 100)}
+                      %
                     </span>
                   </div>
                 )}
@@ -467,8 +483,8 @@ const TaskDetail = (props: TaskDetailProps) => {
                   <input
                     type="text"
                     value={newSubTaskTitle}
-                    onChange={(e) => setNewSubTaskTitle(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddSubTask()}
+                    onChange={e => setNewSubTaskTitle(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleAddSubTask()}
                     placeholder="Add a sub-task..."
                     className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
@@ -485,52 +501,54 @@ const TaskDetail = (props: TaskDetailProps) => {
 
               {/* Sub-tasks list */}
               <div className="space-y-2">
-                {subTasks.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
-                    <CheckCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No sub-tasks yet. Add one above to get started!</p>
-                  </div>
-                ) : (
-                  subTasks.map((subTask) => (
-                    <div
-                      key={subTask.id}
-                      className={cn(
-                        "flex items-center gap-3 p-3 rounded-lg border transition-all group hover:bg-gray-50",
-                        subTask.completed 
-                          ? "border-green-200 bg-green-50/50" 
-                          : "border-gray-200 bg-white"
-                      )}
-                    >
-                      <button
-                        onClick={() => handleSubTaskToggle(subTask.id)}
-                        className={cn(
-                          "flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
-                          subTask.completed
-                            ? "bg-green-500 border-green-500 text-white"
-                            : "border-gray-300 hover:border-green-400"
-                        )}
-                      >
-                        {subTask.completed && <CheckCircle className="h-3 w-3" />}
-                      </button>
-                      <span
-                        className={cn(
-                          "flex-1 text-sm",
-                          subTask.completed
-                            ? "text-gray-500 line-through"
-                            : "text-gray-900"
-                        )}
-                      >
-                        {subTask.title}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteSubTask(subTask.id)}
-                        className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-gray-400 hover:text-red-500 transition-all rounded"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))
-                )}
+                {subTasks.length === 0
+                  ? (
+                      <div className="text-center py-8 text-gray-400">
+                        <CheckCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No sub-tasks yet. Add one above to get started!</p>
+                      </div>
+                    )
+                  : (
+                      subTasks.map(subTask => (
+                        <div
+                          key={subTask.id}
+                          className={cn(
+                            'flex items-center gap-3 p-3 rounded-lg border transition-all group hover:bg-gray-50',
+                            subTask.completed
+                              ? 'border-green-200 bg-green-50/50'
+                              : 'border-gray-200 bg-white',
+                          )}
+                        >
+                          <button
+                            onClick={() => handleSubTaskToggle(subTask.id)}
+                            className={cn(
+                              'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
+                              subTask.completed
+                                ? 'bg-green-500 border-green-500 text-white'
+                                : 'border-gray-300 hover:border-green-400',
+                            )}
+                          >
+                            {subTask.completed && <CheckCircle className="h-3 w-3" />}
+                          </button>
+                          <span
+                            className={cn(
+                              'flex-1 text-sm',
+                              subTask.completed
+                                ? 'text-gray-500 line-through'
+                                : 'text-gray-900',
+                            )}
+                          >
+                            {subTask.title}
+                          </span>
+                          <button
+                            onClick={() => handleDeleteSubTask(subTask.id)}
+                            className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-gray-400 hover:text-red-500 transition-all rounded"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))
+                    )}
               </div>
             </div>
           </div>
@@ -552,7 +570,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                           </label>
                           <Dropdown
                             value={status}
-                            onChange={(value) => handleStatusChange(value as 'todo' | 'in-progress' | 'done' | 'cancelled')}
+                            onChange={value => handleStatusChange(value as 'todo' | 'in-progress' | 'done' | 'cancelled')}
                             options={statusOptions}
                             disabled={loading}
                             size="sm"
@@ -565,7 +583,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                           </label>
                           <Dropdown
                             value={urgency}
-                            onChange={(value) => handleUrgencyChange(value as 'low' | 'medium' | 'high' | 'critical')}
+                            onChange={value => handleUrgencyChange(value as 'low' | 'medium' | 'high' | 'critical')}
                             options={urgencyOptions}
                             disabled={loading}
                             size="sm"
@@ -630,7 +648,7 @@ const TaskDetail = (props: TaskDetailProps) => {
                           placeholder="Add label..."
                           className={cn(
                             'text-sm border border-gray-300 rounded-md px-3 py-1 text-right w-32 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none',
-                            loading && 'opacity-50'
+                            loading && 'opacity-50',
                           )}
                         />
                       )
@@ -655,17 +673,19 @@ const TaskDetail = (props: TaskDetailProps) => {
                           disabled={loading}
                           className={cn(
                             'text-sm border border-gray-300 rounded-md px-3 py-1 text-right focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none',
-                            loading && 'opacity-50'
+                            loading && 'opacity-50',
                           )}
                         />
                       )
                     : (
                         <span className="text-sm font-medium text-gray-900">
-                          {deadline ? new Date(deadline).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          }) : 'No due date'}
+                          {deadline
+                            ? new Date(deadline).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })
+                            : 'No due date'}
                         </span>
                       )}
                 </div>

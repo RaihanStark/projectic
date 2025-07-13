@@ -78,3 +78,9 @@ Required for production:
 
 ## Development Guidelines
 - Prioritize use of Headless UI before custom build
+
+## Anti-Patterns
+- Do not run `npm run dev`
+
+## Code Quality Rules
+- Do not check types

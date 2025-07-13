@@ -1,0 +1,50 @@
+
+> dev
+> run-p db-server:file dev:next
+
+
+> db-server:file
+> pglite-server --db=local.db
+
+
+> dev:next
+> next dev --turbopack
+
+Initializing PGLite with database: local.db
+Debug level: 0
+PGlite database initialized
+Socket server error: Error: listen EADDRINUSE: address already in use 127.0.0.1:5432
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at node:net:2205:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 5432
+}
+Failed to start PGLiteSocketServer: Error: listen EADDRINUSE: address already in use 127.0.0.1:5432
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at node:net:2205:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 5432
+}
+Unhandled error: Error: listen EADDRINUSE: address already in use 127.0.0.1:5432
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at node:net:2205:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 5432
+}
+[?25h
+ERROR: "db-server:file" exited with 1.

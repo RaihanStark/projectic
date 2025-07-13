@@ -3,17 +3,45 @@
 import {
   Circle,
   Folder,
+  FolderOpen,
   Home,
   Plus,
 } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { useProjectStore } from '@/stores/projectStore';
 
 type SidebarProps = {
   onNewTaskClick: () => void;
+  onNewProjectClick?: () => void;
   taskCount?: number;
 };
 
-const Sidebar = ({ onNewTaskClick, taskCount = 0 }: SidebarProps) => {
+const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps) => {
+  const pathname = usePathname();
+  const { projects, getActiveProjects, setProjects } = useProjectStore();
+  const activeProjects = getActiveProjects();
+
+  useEffect(() => {
+    // Fetch projects if not already loaded
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/dashboard/api/projects');
+        if (response.ok) {
+          const data = await response.json();
+          setProjects(data);
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      }
+    };
+
+    if (projects.length === 0) {
+      fetchProjects();
+    }
+  }, [projects.length, setProjects]);
+
   return (
     <aside className="hidden h-screen w-64 flex-col border-r border-gray-200 bg-white md:flex">
       <div className="flex h-16 items-center border-b border-gray-200 px-6">
@@ -36,7 +64,11 @@ const Sidebar = ({ onNewTaskClick, taskCount = 0 }: SidebarProps) => {
           </div>
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 rounded-lg bg-gray-100 px-3 py-2 text-gray-900"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+              pathname === '/dashboard'
+                ? 'bg-gray-100 text-gray-900'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
           >
             <Home className="h-4 w-4" />
             All Tasks
@@ -44,28 +76,70 @@ const Sidebar = ({ onNewTaskClick, taskCount = 0 }: SidebarProps) => {
               {taskCount}
             </span>
           </Link>
+          <Link
+            href="/dashboard/projects"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+              pathname === '/dashboard/projects'
+                ? 'bg-gray-100 text-gray-900'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            <FolderOpen className="h-4 w-4" />
+            My Projects
+            <span className="ml-auto flex h-6 w-9 items-center justify-center rounded-full bg-gray-200 text-xs">
+              {activeProjects.length}
+            </span>
+          </Link>
         </nav>
+
+        {/* Projects Section */}
         <div className="px-4">
-          <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-gray-500">
-            Labels
-          </h3>
-          <nav className="grid items-start text-sm font-medium">
-            <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900"
+          <div className="flex items-center justify-between mb-2 px-3">
+            <h3 className="text-xs font-semibold uppercase text-gray-500">
+              Projects
+            </h3>
+            <button
+              type="button"
+              onClick={onNewProjectClick}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              title="Add Project"
             >
-              <Circle className="h-4 w-4 fill-red-500 text-red-500" />
-              Important
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900"
-            >
-              <Circle className="h-4 w-4 fill-green-500 text-green-500" />
-              Updates
-            </Link>
+              <Plus className="h-3 w-3" />
+            </button>
+          </div>
+          <nav className="grid items-start text-sm font-medium space-y-1">
+            {activeProjects.map(project => (
+              <Link
+                key={project.id}
+                href={`/dashboard/project/${project.id}`}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                  pathname === `/dashboard/project/${project.id}`
+                    ? 'bg-gray-100 text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+                title={project.name}
+              >
+                <Circle
+                  className="h-4 w-4 flex-shrink-0"
+                  style={{
+                    color: project.color,
+                    fill: project.color,
+                  }}
+                />
+                <span className="flex-1 truncate min-w-0">
+                  {project.name.length > 19 ? `${project.name.substring(0, 19)}...` : project.name}
+                </span>
+                <span className="flex h-5 w-6 items-center justify-center rounded-full bg-gray-200 text-xs flex-shrink-0">
+                  {project.totalTasks || 0}
+                </span>
+              </Link>
+            ))}
+            {activeProjects.length === 0 && (
+              <p className="px-3 py-2 text-sm text-gray-500">No projects yet</p>
+            )}
           </nav>
         </div>
+
       </div>
     </aside>
   );

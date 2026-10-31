@@ -2,7 +2,6 @@
 
 A modern, fast, and lightweight project & task management web application built with **Next.js 15**, **React 19**, **TypeScript**, **Drizzle ORM**, and **PGlite**.
 
-[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen.svg)](https://projectic-v2-27sr.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---

@@ -10,7 +10,6 @@ import NewTaskModal from '@/components/NewTaskModal';
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [isTaskModalOpen, setTaskModalOpen] = useState(false);
   const [isProjectModalOpen, setProjectModalOpen] = useState(false);
-  const [isModalOpen, setModalOpen] = useState(false);
   const [taskCount, setTaskCount] = useState(0);
 
   // TODO: use zustand later

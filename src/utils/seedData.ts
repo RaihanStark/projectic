@@ -236,9 +236,13 @@ export async function seedSampleTasks(userId: number) {
     { taskId: insertedTasks[10]?.id, title: 'Add LinkedIn API integration', completed: false, order: 4 },
   ];
 
+  const validSubTasks = subTasksData.filter(
+    (st): st is typeof st & { taskId: number } => typeof st.taskId === 'number',
+  );
+
   await db
     .insert(subTasksSchema)
-    .values(subTasksData);
+    .values(validSubTasks);
 
   return insertedTasks;
 }

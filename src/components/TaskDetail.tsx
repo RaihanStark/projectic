@@ -101,7 +101,7 @@ const TaskDetail = (props: TaskDetailProps) => {
   // Sub-tasks state
   const [subTasks, setSubTasks] = useState<SubTask[]>([]);
   const [newSubTaskTitle, setNewSubTaskTitle] = useState('');
-  const [subTasksLoading, setSubTasksLoading] = useState(false);
+  const [_subTasksLoading, setSubTasksLoading] = useState(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -301,11 +301,6 @@ const TaskDetail = (props: TaskDetailProps) => {
   const urgencyInfo = urgencyConfig[urgency];
   const StatusIcon = statusInfo.icon;
   const UrgencyIcon = urgencyInfo.icon;
-
-  const inputStyles
-    = 'w-full rounded-md border-gray-300 bg-gray-50 p-2 text-base text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500';
-  const smallInputStyles
-    = 'rounded-md border-gray-300 bg-gray-50 p-1 text-sm text-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500';
 
   return (
     <div className="flex-1 overflow-hidden">

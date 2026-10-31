@@ -237,7 +237,7 @@ export default function Dashboard() {
       if (activeTab === 'all') {
         const aIsInactive = a.status === 'done' || a.status === 'cancelled';
         const bIsInactive = b.status === 'done' || b.status === 'cancelled';
-        
+
         if (aIsInactive && !bIsInactive) {
           return 1;
         }
@@ -566,7 +566,10 @@ export default function Dashboard() {
                                       (task.status === 'done' || task.status === 'cancelled') ? 'bg-gray-400' : 'bg-green-500',
                                     )}
                                     style={{
-                                      width: `${subTaskCounts[task.id]?.total > 0 ? (subTaskCounts[task.id].completed / subTaskCounts[task.id].total) * 100 : 0}%`,
+                                      width: `${(() => {
+                                        const counts = subTaskCounts[task.id];
+                                        return counts && counts.total > 0 ? (counts.completed / counts.total) * 100 : 0;
+                                      })()}%`,
                                     }}
                                   >
                                   </div>

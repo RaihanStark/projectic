@@ -15,7 +15,7 @@ const updateProjectSchema = z.object({
 
 // GET /api/projects/[id] - Fetch a single project with stats
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -133,7 +133,7 @@ export async function PATCH(
 
 // DELETE /api/projects/[id] - Delete a project
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {

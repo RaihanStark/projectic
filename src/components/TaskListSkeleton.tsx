@@ -1,9 +1,5 @@
 'use client';
 
-const SkeletonItem = () => (
-  <div className="animate-pulse bg-gray-200 rounded" />
-);
-
 const TaskItemSkeleton = () => (
   <li className="group p-4 transition-colors hover:bg-gray-50">
     <div className="flex items-start gap-3 w-full">

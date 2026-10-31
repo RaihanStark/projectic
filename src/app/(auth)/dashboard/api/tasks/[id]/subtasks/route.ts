@@ -6,7 +6,7 @@ import { createErrorResponse, createSuccessResponse, getCurrentUserId } from '@/
 
 // GET /api/tasks/[id]/subtasks - Get all sub-tasks for a task
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {

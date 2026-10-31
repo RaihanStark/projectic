@@ -33,7 +33,7 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, editProject }: NewProjectM
   const [project, setProject] = useState({
     name: '',
     description: '',
-    color: projectColors[0].value,
+    color: projectColors[0]?.value || '#3b82f6',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, editProject }: NewProjectM
       setProject({
         name: '',
         description: '',
-        color: projectColors[0].value,
+        color: projectColors[0]?.value || '#3b82f6',
       });
     }
     setError(null);
@@ -112,7 +112,7 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, editProject }: NewProjectM
         setProject({
           name: '',
           description: '',
-          color: projectColors[0].value,
+          color: projectColors[0]?.value || '#3b82f6',
         });
       }
     } catch (err) {

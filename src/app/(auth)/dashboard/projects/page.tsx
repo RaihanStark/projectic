@@ -1,6 +1,5 @@
 'use client';
 
-import { formatDistanceToNow } from 'date-fns';
 import {
   AlertCircle,
   CheckCircle,
@@ -59,7 +58,7 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleCreateProject = async (newProject: any) => {
+  const handleCreateProject = async (_newProject: any) => {
     await fetchProjects();
     toast.success('Project created successfully');
   };
@@ -69,7 +68,7 @@ export default function ProjectsPage() {
     setShowNewProjectModal(true);
   };
 
-  const handleUpdateProject = async (updatedProject: any) => {
+  const handleUpdateProject = async (_updatedProject: any) => {
     await fetchProjects();
     toast.success('Project updated successfully');
     setEditingProject(null);
@@ -100,22 +99,6 @@ export default function ProjectsPage() {
     } catch (error) {
       console.error('Error deleting project:', error);
       toast.error('Failed to delete project');
-    }
-  };
-
-  const getProgressPercentage = (completed: number, total: number) => {
-    return total > 0 ? Math.round((completed / total) * 100) : 0;
-  };
-
-  const getProgressBarWidth = (completed: number, total: number) => {
-    return total > 0 ? (completed / total) * 100 : 0;
-  };
-
-  const formatLastActivity = (updatedAt: Date) => {
-    try {
-      return formatDistanceToNow(new Date(updatedAt), { addSuffix: true });
-    } catch (error) {
-      return 'recently';
     }
   };
 

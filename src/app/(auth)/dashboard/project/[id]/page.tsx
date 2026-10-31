@@ -17,68 +17,8 @@ import toast from 'react-hot-toast';
 import ConfirmationDialog from '@/components/ConfirmationDialog';
 import NewProjectModal from '@/components/NewProjectModal';
 import NewTaskModal from '@/components/NewTaskModal';
-import { useProjectStore } from '@/stores/projectStore';
-import { useTaskStore } from '@/stores/taskStore';
 import { cn } from '@/utils/cn';
 import { formatDate, getStatusDisplayName, getUrgencyDisplayName } from '@/utils/taskUtils';
-
-// Mock tasks for each project
-const mockProjectTasks = {
-  1: [
-    {
-      id: 1,
-      title: 'Fix login bug',
-      description: 'Bug fix needed for authentication system',
-      status: 'in-progress' as const,
-      urgency: 'high' as const,
-      deadline: '2024-12-25',
-    },
-    {
-      id: 2,
-      title: 'Research competitors',
-      description: 'Analyze competitor websites and features',
-      status: 'done' as const,
-      urgency: 'medium' as const,
-      deadline: '2024-12-20',
-    },
-    {
-      id: 3,
-      title: 'Create wireframes',
-      description: 'Design initial page layouts and user flows',
-      status: 'todo' as const,
-      urgency: 'high' as const,
-      deadline: '2024-12-28',
-    },
-  ],
-  2: [
-    {
-      id: 4,
-      title: 'Plan vacation',
-      description: 'Research destinations and book flights',
-      status: 'todo' as const,
-      urgency: 'medium' as const,
-      deadline: '2025-01-15',
-    },
-    {
-      id: 5,
-      title: 'Fix car',
-      description: 'Schedule maintenance appointment',
-      status: 'in-progress' as const,
-      urgency: 'low' as const,
-      deadline: '2024-12-30',
-    },
-  ],
-  3: [
-    {
-      id: 6,
-      title: 'Design mobile mockups',
-      description: 'Create initial wireframes for mobile app',
-      status: 'todo' as const,
-      urgency: 'high' as const,
-      deadline: '2024-12-30',
-    },
-  ],
-};
 
 const priorityClasses: { [key: string]: string } = {
   low: 'bg-green-100 text-green-800',
@@ -106,8 +46,6 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { updateTask } = useTaskStore();
-  const { updateProject } = useProjectStore();
 
   useEffect(() => {
     fetchProjectAndTasks();
@@ -141,7 +79,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
     }
   };
 
-  const handleCreateTask = async (newTask: Task) => {
+  const handleCreateTask = async (_newTask: Task) => {
     await fetchProjectAndTasks();
     toast.success('Task created successfully');
   };
@@ -172,12 +110,11 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
     }
   };
 
-  const handleUpdateProject = async (updatedProject: any) => {
+  const handleUpdateProject = async (_updatedProject: any) => {
     await fetchProjectAndTasks();
     toast.success('Project updated successfully');
     setShowEditProjectModal(false);
   };
-
 
   if (loading) {
     return (

@@ -7,7 +7,7 @@ import { getCurrentUserId } from '@/utils/auth';
 
 // GET /api/projects/[id]/tasks - Fetch all tasks for a specific project
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {

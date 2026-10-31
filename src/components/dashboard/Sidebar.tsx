@@ -43,7 +43,7 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
   }, [projects.length, setProjects]);
 
   return (
-    <aside className="hidden h-screen w-64 flex-col border-r border-gray-200 bg-white md:flex">
+    <aside className="hidden h-screen w-72 flex-col border-r border-gray-200 bg-white md:flex">
       <div className="flex h-16 items-center border-b border-gray-200 px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <Folder className="h-6 w-6" />
@@ -66,13 +66,13 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
             href="/dashboard"
             className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
               pathname === '/dashboard'
-                ? 'bg-gray-100 text-gray-900'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-gray-100 text-gray-900 font-semibold'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
           >
             <Home className="h-4 w-4" />
             All Tasks
-            <span className="ml-auto flex h-6 w-9 items-center justify-center rounded-full bg-gray-200 text-xs">
+            <span className="ml-auto flex h-6 w-8 items-center justify-center rounded-full bg-gray-200 text-xs">
               {taskCount}
             </span>
           </Link>
@@ -80,13 +80,13 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
             href="/dashboard/projects"
             className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
               pathname === '/dashboard/projects'
-                ? 'bg-gray-100 text-gray-900'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-gray-100 text-gray-900 font-semibold'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
           >
             <FolderOpen className="h-4 w-4" />
             My Projects
-            <span className="ml-auto flex h-6 w-9 items-center justify-center rounded-full bg-gray-200 text-xs">
+            <span className="ml-auto flex h-6 w-8 items-center justify-center rounded-full bg-gray-200 text-xs">
               {activeProjects.length}
             </span>
           </Link>
@@ -95,7 +95,7 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
         {/* Projects Section */}
         <div className="px-4">
           <div className="flex items-center justify-between mb-2 px-3">
-            <h3 className="text-xs font-semibold uppercase text-gray-500">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
               Projects
             </h3>
             <button
@@ -104,7 +104,7 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
               className="text-gray-400 hover:text-gray-600 transition-colors"
               title="Add Project"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3.5 w-3.5" />
             </button>
           </div>
           <nav className="grid items-start text-sm font-medium space-y-1">
@@ -114,22 +114,22 @@ const Sidebar = ({ onNewTaskClick, onNewProjectClick, taskCount }: SidebarProps)
                 href={`/dashboard/project/${project.id}`}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
                   pathname === `/dashboard/project/${project.id}`
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-500 hover:text-gray-900'
+                    ? 'bg-gray-100 text-gray-900 font-semibold'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
                 title={project.name}
               >
                 <Circle
-                  className="h-4 w-4 flex-shrink-0"
+                  className="h-3.5 w-3.5 flex-shrink-0"
                   style={{
                     color: project.color,
                     fill: project.color,
                   }}
                 />
                 <span className="flex-1 truncate min-w-0">
-                  {project.name.length > 19 ? `${project.name.substring(0, 19)}...` : project.name}
+                  {project.name}
                 </span>
-                <span className="flex h-5 w-6 items-center justify-center rounded-full bg-gray-200 text-xs flex-shrink-0">
+                <span className="ml-auto flex h-5 w-6 items-center justify-center rounded-full bg-gray-200 text-xs flex-shrink-0">
                   {project.totalTasks || 0}
                 </span>
               </Link>

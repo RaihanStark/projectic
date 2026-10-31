@@ -42,6 +42,9 @@ export async function seedSampleTasks(userId: number) {
     .returning();
 
   const [ecommerceProject, financeProject, taskProject, learningProject, socialProject] = insertedProjects;
+  const now = Date.now();
+  const dayOffset = (days: number) => new Date(now + days * 86400000);
+
   const sampleTasks = [
     // E-commerce Platform tasks
     {
@@ -52,7 +55,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Frontend',
       status: 'in-progress' as const,
       urgency: 'high' as const,
-      deadline: new Date('2025-01-15'),
+      deadline: dayOffset(0),
     },
     {
       userId,
@@ -62,7 +65,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Backend',
       status: 'todo' as const,
       urgency: 'critical' as const,
-      deadline: new Date('2025-01-20'),
+      deadline: dayOffset(4),
     },
     {
       userId,
@@ -72,7 +75,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Backend',
       status: 'done' as const,
       urgency: 'medium' as const,
-      deadline: new Date('2024-12-10'),
+      deadline: dayOffset(-10),
     },
 
     // Personal Finance App tasks
@@ -84,7 +87,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Frontend',
       status: 'in-progress' as const,
       urgency: 'high' as const,
-      deadline: new Date('2025-01-25'),
+      deadline: dayOffset(2),
     },
     {
       userId,
@@ -94,7 +97,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Feature',
       status: 'todo' as const,
       urgency: 'medium' as const,
-      deadline: new Date('2025-02-01'),
+      deadline: dayOffset(7),
     },
     {
       userId,
@@ -104,7 +107,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Integration',
       status: 'cancelled' as const,
       urgency: 'low' as const,
-      deadline: new Date('2025-03-01'),
+      deadline: dayOffset(14),
     },
 
     // Task Management System tasks
@@ -116,7 +119,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Backend',
       status: 'in-progress' as const,
       urgency: 'high' as const,
-      deadline: new Date('2025-01-30'),
+      deadline: dayOffset(-2),
     },
     {
       userId,
@@ -126,7 +129,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Analytics',
       status: 'todo' as const,
       urgency: 'medium' as const,
-      deadline: new Date('2025-02-15'),
+      deadline: dayOffset(5),
     },
 
     // Learning Platform tasks
@@ -138,7 +141,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Infrastructure',
       status: 'done' as const,
       urgency: 'critical' as const,
-      deadline: new Date('2024-12-20'),
+      deadline: dayOffset(-15),
     },
     {
       userId,
@@ -148,7 +151,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Feature',
       status: 'todo' as const,
       urgency: 'medium' as const,
-      deadline: new Date('2025-02-10'),
+      deadline: dayOffset(10),
     },
 
     // Social Media Dashboard tasks
@@ -160,7 +163,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Integration',
       status: 'in-progress' as const,
       urgency: 'high' as const,
-      deadline: new Date('2025-01-18'),
+      deadline: dayOffset(0),
     },
     {
       userId,
@@ -170,7 +173,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Feature',
       status: 'todo' as const,
       urgency: 'medium' as const,
-      deadline: new Date('2025-02-05'),
+      deadline: dayOffset(8),
     },
 
     // Tasks without projects (optional)
@@ -182,7 +185,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'Management',
       status: 'todo' as const,
       urgency: 'low' as const,
-      deadline: new Date('2025-01-31'),
+      deadline: dayOffset(12),
     },
     {
       userId,
@@ -192,7 +195,7 @@ export async function seedSampleTasks(userId: number) {
       label: 'DevOps',
       status: 'done' as const,
       urgency: 'low' as const,
-      deadline: new Date('2024-12-15'),
+      deadline: dayOffset(-5),
     },
   ];
 

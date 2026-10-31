@@ -6,6 +6,19 @@ A modern, fast, and lightweight project & task management web application built 
 
 ---
 
+## Preview
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="Projectic Dashboard" width="100%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/projects.png" alt="My Projects Overview" width="49%" />
+  <img src="docs/screenshots/task-detail.png" alt="Task Details & Subtasks" width="49%" />
+</p>
+
+---
+
 ## Features
 
 - 📁 **Project Organization** — Group and organize tasks into dedicated projects with custom color tags.
